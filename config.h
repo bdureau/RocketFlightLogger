@@ -2,12 +2,13 @@
 #define _CONFIG_H
 
 #define MAJOR_VERSION 1
-#define MINOR_VERSION 13
+#define MINOR_VERSION 14
 #define CONFIG_START 32
 //#define BOARD_FIRMWARE "AltiMultiV2"
 #define BOARD_FIRMWARE "AltiMulti"
 //#define ALTIMULTIV2
 #define ALTIMULTI
+
 #include "Arduino.h"
 #include <EEPROM.h>
 
@@ -26,7 +27,7 @@ extern int pinOut1;
 
 struct ConfigStruct {
   int unit;             //0 = meter 1 = feet
-  int beepingMode;      // decide whiche way you want to report the altitude
+  int beepingMode;      // decide which way you want to report the altitude
   int outPut1;          // assign a function to each pyro
   int outPut2;
   int outPut3;
@@ -41,6 +42,7 @@ struct ConfigStruct {
   int endRecordAltitude;  // stop recording when landing define under which altitude we are not recording
   int recordTemperature;  //decide if we want to record temparature
   int superSonicDelay;   //nbr of ms during when we ignore any altitude measurements
+  int connectionSpeed;
   int cksum;  
 };
 extern ConfigStruct config;

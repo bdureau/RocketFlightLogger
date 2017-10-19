@@ -38,8 +38,9 @@ void defaultConfig()
   //config.separationVelocity = 10; 
   config.nbrOfMeasuresForApogee = 5;
   config.endRecordAltitude=3;  // stop recording when landing define under which altitude we are not recording
-  config.recordTemperature =0;  //decide if we want to record temparature
+  config.recordTemperature =0;  //decide if we want to record temperature
   config.superSonicDelay =0;
+  config.connectionSpeed =9600;
   config.cksum=0xBA;  
 }
 boolean readAltiConfig() {

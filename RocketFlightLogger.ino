@@ -1,12 +1,12 @@
 /*
-Rocket Flight Logger ver 1.13
+Rocket Flight Logger ver 1.14
  Copyright Boris du Reau 2012-2017
  
  The following is a datalogger for logging rocket flight.
  So far it can log the rocket altitude during the flight.
  
  
- This is using a BMP085 presure sensor and an Atmega 328
+ This is using a BMP085 or bmp180 presure sensor and an Atmega 328
  The following record the flight in an EEPROM
  
  
@@ -55,6 +55,8 @@ Rocket Flight Logger ver 1.13
  Major changes on version 1.13
  Add compatibility with AltimultiV2
  Change resolution of the sensor 
+ Major changes on version 1.14
+ Added telemetry
  */
 
 
@@ -76,6 +78,8 @@ int mode = 0; //0 = read; 1 = write;
 Adafruit_BMP085 bmp;
 logger_I2C_eeprom logger(0x50) ;
 long endAddress = 65536;
+long BAUD_RATE=57600;
+//long BAUD_RATE=38400;
 
 //ground level altitude
 long initialAltitude;
@@ -181,7 +185,7 @@ void setup()
 
   //You can change the baud rate here 
   //and change it to 57600, 115200 etc..
-  Serial.begin(9600);
+  Serial.begin(BAUD_RATE);
 
   pinMode(A0, INPUT);
 
@@ -407,6 +411,41 @@ void setEventState(int pyroOut, boolean state)
     #endif
   }    
 }
+
+void SendTelemetry() {
+  //check liftoff
+  int li = 0;
+  if(liftOff)
+    li=1;
+    
+  //check apogee  
+  int ap=0;
+  if(apogeeHasFired)
+    ap=1;  
+    
+  //check main
+  int ma=0;
+  if(mainHasFired)
+    ma =1;
+  int landed = 0;
+  if( mainHasFired && currAltitude <10)
+    landed =1;
+  Serial.print(F("$telemetry,"));
+  Serial.print(currAltitude);
+  Serial.print(F(","));
+  Serial.print(li);
+  Serial.print(F(","));
+  Serial.print(ap);
+  Serial.print(F(","));
+  Serial.print(apogeeAltitude);
+  Serial.print(F(","));
+  Serial.print(ma);
+  Serial.print(F(","));
+  Serial.print(mainAltitude);
+  Serial.print(F(","));
+  Serial.print(landed);
+  Serial.println(F(";"));
+}
 //================================================================
 // Main loop which call the menu
 //================================================================
@@ -465,9 +504,12 @@ void recordAltitude()
 
     //read current altitude
     currAltitude = (KalmanCalc(bmp.readAltitude())- initialAltitude);
+    if (liftOff)
+      SendTelemetry();
     if (( currAltitude > liftoffAltitude) == true && liftOff == false && mainHasFired == false)
     {
       liftOff = true;
+      SendTelemetry();
       // save the time
       initialTime =millis();
       if (config.superSonicYesNo == 1)
@@ -493,7 +535,7 @@ void recordAltitude()
         unsigned long timerEvent1_startime;
 
         currAltitude = (KalmanCalc(bmp.readAltitude())- initialAltitude);
-
+        SendTelemetry();
         currentTime = millis()- initialTime;
         diffTime = currentTime - prevTime;
         prevTime = currentTime;
@@ -613,6 +655,7 @@ void recordAltitude()
             #endif
             apogeeReadyToFire = false;
             apogeeHasFired=true;
+            SendTelemetry();
           }
         }
 
@@ -653,6 +696,7 @@ void recordAltitude()
             mainReadyToFire = false;
             //setEventState(pinMain, true);
             mainHasFired=true;
+            SendTelemetry();
           }
         }
 
@@ -689,6 +733,7 @@ void recordAltitude()
         if(MainFiredComplete && currAltitude < 10)
         {
           liftOff =false;
+          SendTelemetry();
         }
 
         if (Output1Fired == true && Output2Fired == true && Output3Fired == true)
@@ -697,6 +742,7 @@ void recordAltitude()
           Serial.println(F("all event have fired"));
           #endif
           exit =true;
+          SendTelemetry();
         }
 
       }
@@ -733,6 +779,8 @@ void MainMenu()
     if (FastReading == false)
     {
       currAltitude = (KalmanCalc(bmp.readAltitude())- initialAltitude);
+      if (liftOff)
+      SendTelemetry();
       if (( currAltitude > liftoffAltitude) != true)
       {
         if(out1Enable)
