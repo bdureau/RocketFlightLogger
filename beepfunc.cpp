@@ -7,8 +7,12 @@ boolean noContinuity = false;
 boolean apogeeHasFired =false;
 
 boolean NoBeep=false;
-
+#ifdef ALTIMULTIV2
+const int pinSpeaker = 13;
+#endif
+#ifdef ALTIMULTI
 const int pinSpeaker = 12;
+#endif
 int beepingFrequency;
 
 void continuityCheck(int pin)

@@ -2,8 +2,12 @@
 #define _CONFIG_H
 
 #define MAJOR_VERSION 1
-#define MINOR_VERSION 12
+#define MINOR_VERSION 13
 #define CONFIG_START 32
+//#define BOARD_FIRMWARE "AltiMultiV2"
+#define BOARD_FIRMWARE "AltiMulti"
+//#define ALTIMULTIV2
+#define ALTIMULTI
 #include "Arduino.h"
 #include <EEPROM.h>
 

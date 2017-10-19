@@ -1,5 +1,6 @@
 #ifndef _BEEPFUNC_H
 #define _BEEPFUNC_H
+#include "config.h"
 #include "Arduino.h"
 extern boolean noContinuity;
 //Our drogue has been ejected i.e: apogee has been detected

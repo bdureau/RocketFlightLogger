@@ -4,8 +4,14 @@
 const int pyroOut1 = 9;
 int pinApogee = 9;
 //pyro out 2
+#ifdef ALTIMULTIV2
+const int pyroOut2= 12;
+int pinMain = 12;
+#endif
+#ifdef ALTIMULTI
 const int pyroOut2= 13;
 int pinMain = 13;
+#endif
 //pyro out 3
 const int pyroOut3=17;
 int pinOut3 =17;
@@ -166,7 +172,7 @@ void printAltiConfig()
   Serial.print(config.mainAltitude);
   Serial.print(F(","));
   //AltimeterName
-  Serial.print(F("AltiMulti"));
+  Serial.print(F(BOARD_FIRMWARE));
   Serial.print(F(","));
   //alti major version
   Serial.print(MAJOR_VERSION);

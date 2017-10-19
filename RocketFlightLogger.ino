@@ -1,6 +1,6 @@
 /*
-Rocket Flight Logger ver 1.12
- Copyright Boris du Reau 2012-2016
+Rocket Flight Logger ver 1.13
+ Copyright Boris du Reau 2012-2017
  
  The following is a datalogger for logging rocket flight.
  So far it can log the rocket altitude during the flight.
@@ -52,6 +52,9 @@ Rocket Flight Logger ver 1.12
  Added function to default the alti config
  Major changes on version 1.12
  Fixes
+ Major changes on version 1.13
+ Add compatibility with AltimultiV2
+ Change resolution of the sensor 
  */
 
 
@@ -182,8 +185,11 @@ void setup()
 
   pinMode(A0, INPUT);
 
-  //Presure Sensor Initialisation
-  bmp.begin( BMP085_STANDARD);
+  //Presure Sensor Initialisation 
+  //Note that BMP180 is compatible with the BMP085 library
+  //bmp.begin( BMP085_STANDARD);
+  //Low res should work better at high speed
+  bmp.begin( BMP085_ULTRALOWPOWER);
   //our drogue has not been fired
   apogeeHasFired=false;
   mainHasFired=false;
