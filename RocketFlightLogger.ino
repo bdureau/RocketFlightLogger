@@ -1,5 +1,5 @@
 /*
-Rocket Flight Logger ver 1.11
+Rocket Flight Logger ver 1.12
  Copyright Boris du Reau 2012-2016
  
  The following is a datalogger for logging rocket flight.
@@ -50,6 +50,8 @@ Rocket Flight Logger ver 1.11
  rethink alti config
  Major changes on version 1.11
  Added function to default the alti config
+ Major changes on version 1.12
+ Fixes
  */
 
 
@@ -132,6 +134,9 @@ boolean Output3Fired = false;
 //
 int currentFileNbr=0;
 long currentMemaddress=200;
+
+void assignPyroOutputs();
+void MainMenu();
 //================================================================
 // Start program
 //================================================================
@@ -269,8 +274,8 @@ void setup()
   #endif
   long lastFlightNbr = logger.getLastFlightNbr();
   //currentFileNbr = logger.getLastFlightNbr()+1;
-  //Serial.print("Last flight:");
-  //Serial.println(lastFlightNbr);
+  Serial.print("Last flight:");
+  Serial.println(lastFlightNbr);
   if (lastFlightNbr < 0)
   {
     //  Serial.println("This is the first flight");
@@ -291,6 +296,8 @@ void setup()
   /*if(isEepromFull())
    canRecord == false;*/
 canRecord =logger.CanRecord();
+if (!canRecord)
+Serial.println("Cannot record");
 
 }
 void assignPyroOutputs()
@@ -316,7 +323,7 @@ void assignPyroOutputs()
     break;
   case 2:
     timerEvent1_enable = true;
-    out3Delay = config.outPut1Delay;
+    out1Delay = config.outPut1Delay;
     pinOut1= pyroOut1;
     break; 
   default:

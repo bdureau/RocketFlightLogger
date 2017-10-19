@@ -22,7 +22,7 @@ void defaultConfig()
   config.beepingMode=0;
   config.outPut1=0;
   config.outPut2=1;
-  config.outPut3=2;
+  config.outPut3=3;
   config.outPut1Delay=0;
   config.outPut2Delay=0;
   config.outPut3Delay=0;

@@ -246,9 +246,22 @@ boolean logger_I2C_eeprom::CanRecord()
 {
   long lastFlight;
   lastFlight = getLastFlightNbr();
+  if (lastFlight==-1)
+  return true;
+ // Serial.println(lastFlight);
   if (lastFlight == 24)
+  {
+   // #ifdef SERIAL_DEBUG
+  //Serial.println("25 flights");
+ // #endif
     return false;
+  }
  if(getFlightStop(lastFlight)> 65500 )
+ {
+   // #ifdef SERIAL_DEBUG
+  //Serial.println("memory is full");
+  //#endif
    return false;   
+ }
  return true;   
 } 
