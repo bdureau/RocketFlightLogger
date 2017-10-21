@@ -3,16 +3,16 @@ This project is part of a complete rocket flight computer. The board has 3 pyro 
 I am also working on a Java interface and an Android application that can plot the flight and configure the altimeter. 
 <img src="/pictures/altimulti.JPG" width="49%">  
 
-With a bluetooth module
+With a bluetooth module                                                                              
 <img src="/pictures/altimulti_bluetooth.JPG" width="49%">       
 
-With a USB cable
+With a USB cable                                                    
 <img src="/pictures/altimulti_usb.JPG" width="49%">      
 
-With a 3DR telemetry module
+With a 3DR telemetry module                                             
 <img src="/pictures/altimulti_3DRtelemetry.jpg" width="49%">      
 
-Telemetry on your tablet
+Telemetry on your tablet or phone                                              
 <img src="/pictures/altimulti_telemetry.jpg" width="49%">
 
 # Talking to the altimeter using command line
