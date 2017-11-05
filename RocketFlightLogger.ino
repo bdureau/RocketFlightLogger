@@ -1,5 +1,5 @@
 /*
-Rocket Flight Logger ver 1.14
+Rocket Flight Logger ver 1.15
  Copyright Boris du Reau 2012-2017
  
  The following is a datalogger for logging rocket flight.
@@ -59,14 +59,23 @@ Rocket Flight Logger ver 1.14
  Added telemetry
  */
 
-
+//altimeter configuration lib
+#include "config.h"
 #include <Wire.h> //I2C library
+
+
+#ifdef BMP085_180
 #include <Adafruit_BMP085.h>
-//used for writing in the microcontroleur lib
-#include <EEPROM.h>
+#else
+#include <BMP280.h>
+#define P0 1013.25
+#endif
+
+
+
 #include "kalman.h"
 #include "beepfunc.h"
-#include "config.h"
+
 #include "logger_i2c_eeprom.h"
 //#define SERIAL_DEBUG
 #undef SERIAL_DEBUG
@@ -75,10 +84,16 @@ Rocket Flight Logger ver 1.14
 // Global variables
 //////////////////////////////////////////////////////////////////////
 int mode = 0; //0 = read; 1 = write;
+
+#ifdef BMP085_180
 Adafruit_BMP085 bmp;
+#else
+BMP280 bmp;
+#endif
+
 logger_I2C_eeprom logger(0x50) ;
 long endAddress = 65536;
-long BAUD_RATE=57600;
+//long BAUD_RATE=57600;
 //long BAUD_RATE=38400;
 
 //ground level altitude
@@ -144,6 +159,27 @@ long currentMemaddress=200;
 
 void assignPyroOutputs();
 void MainMenu();
+
+#ifdef BMP085_180
+double ReadAltitude()
+{
+	return KalmanCalc(bmp.readAltitude());
+}
+#else
+// Only used by BMP280
+double ReadAltitude()
+{
+   double T,P, A;
+  char result = bmp.startMeasurment();
+  if(result!=0){
+    delay(result);
+    result = bmp.getTemperatureAndPressure(T,P);
+   A= KalmanCalc(bmp.altitude(P,P0));
+
+  }
+return A;
+}
+#endif
 //================================================================
 // Start program
 //================================================================
@@ -154,12 +190,20 @@ void setup()
 
   // Read altimeter softcoded configuration
   softConfigValid = readAltiConfig();
+
   // check if configuration is valid 
   if (!softConfigValid)
   {
     //default values
     defaultConfig();
     writeConfigStruc();
+  }
+
+  //if the baud rate is invalid let's default it
+  if (!CheckValideBaudRate(config.connectionSpeed))
+  {
+	  config.connectionSpeed=57600;
+	  writeConfigStruc();
   }
   //Assign Pyro output to main, apogee or airstart
   /*getOutPin(config.outPut1);
@@ -185,15 +229,23 @@ void setup()
 
   //You can change the baud rate here 
   //and change it to 57600, 115200 etc..
-  Serial.begin(BAUD_RATE);
+  //Serial.begin(BAUD_RATE);
+  Serial.begin(config.connectionSpeed);
 
   pinMode(A0, INPUT);
 
+
   //Presure Sensor Initialisation 
+#ifdef BMP085_180
   //Note that BMP180 is compatible with the BMP085 library
   //bmp.begin( BMP085_STANDARD);
   //Low res should work better at high speed
-  bmp.begin( BMP085_ULTRALOWPOWER);
+  //bmp.begin( BMP085_ULTRALOWPOWER);
+  bmp.begin( config.altimeterResolution);
+#else
+  bmp.begin();
+  bmp.setOversampling(config.altimeterResolution)
+#endif
   //our drogue has not been fired
   apogeeHasFired=false;
   mainHasFired=false;
@@ -262,13 +314,13 @@ void setup()
   // let's do some dummy altitude reading
   // to initialise the Kalman filter
   for (int i=0; i<50; i++){
-    KalmanCalc(bmp.readAltitude());
+    ReadAltitude();
   }
 
   //let's read the launch site altitude
   long sum = 0;
   for (int i=0; i<10; i++){
-    sum += KalmanCalc(bmp.readAltitude());
+    sum += ReadAltitude();
     delay(50); 
   }
   initialAltitude = (sum / 10.0);
@@ -412,7 +464,7 @@ void setEventState(int pyroOut, boolean state)
   }    
 }
 
-void SendTelemetry() {
+void SendTelemetry(long sampleTime) {
   //check liftoff
   int li = 0;
   if(liftOff)
@@ -444,6 +496,8 @@ void SendTelemetry() {
   Serial.print(mainAltitude);
   Serial.print(F(","));
   Serial.print(landed);
+  Serial.print(F(","));
+  Serial.print(sampleTime);
   Serial.println(F(";"));
 }
 //================================================================
@@ -503,13 +557,13 @@ void recordAltitude()
   {
 
     //read current altitude
-    currAltitude = (KalmanCalc(bmp.readAltitude())- initialAltitude);
+    currAltitude = (ReadAltitude()- initialAltitude);
     if (liftOff)
-      SendTelemetry();
+      SendTelemetry(millis()- initialTime);
     if (( currAltitude > liftoffAltitude) == true && liftOff == false && mainHasFired == false)
     {
       liftOff = true;
-      SendTelemetry();
+      SendTelemetry(0);
       // save the time
       initialTime =millis();
       if (config.superSonicYesNo == 1)
@@ -534,9 +588,10 @@ void recordAltitude()
         unsigned long diffTime;
         unsigned long timerEvent1_startime;
 
-        currAltitude = (KalmanCalc(bmp.readAltitude())- initialAltitude);
-        SendTelemetry();
+        currAltitude = (ReadAltitude()- initialAltitude);
+
         currentTime = millis()- initialTime;
+        SendTelemetry(currentTime);
         diffTime = currentTime - prevTime;
         prevTime = currentTime;
         if(timerEvent1_enable && Event1Fired == false)
@@ -655,7 +710,7 @@ void recordAltitude()
             #endif
             apogeeReadyToFire = false;
             apogeeHasFired=true;
-            SendTelemetry();
+            SendTelemetry(millis()- initialTime);
           }
         }
 
@@ -696,7 +751,7 @@ void recordAltitude()
             mainReadyToFire = false;
             //setEventState(pinMain, true);
             mainHasFired=true;
-            SendTelemetry();
+            SendTelemetry(millis()- initialTime);
           }
         }
 
@@ -733,7 +788,7 @@ void recordAltitude()
         if(MainFiredComplete && currAltitude < 10)
         {
           liftOff =false;
-          SendTelemetry();
+          SendTelemetry(millis()- initialTime);
         }
 
         if (Output1Fired == true && Output2Fired == true && Output3Fired == true)
@@ -742,7 +797,7 @@ void recordAltitude()
           Serial.println(F("all event have fired"));
           #endif
           exit =true;
-          SendTelemetry();
+          SendTelemetry(millis()- initialTime);
         }
 
       }
@@ -778,9 +833,9 @@ void MainMenu()
   {
     if (FastReading == false)
     {
-      currAltitude = (KalmanCalc(bmp.readAltitude())- initialAltitude);
+      currAltitude = (ReadAltitude()- initialAltitude);
       if (liftOff)
-      SendTelemetry();
+      SendTelemetry(millis()- initialTime);
       if (( currAltitude > liftoffAltitude) != true)
       {
         if(out1Enable)

@@ -2,14 +2,21 @@
 #define _CONFIG_H
 
 #define MAJOR_VERSION 1
-#define MINOR_VERSION 14
+#define MINOR_VERSION 15
 #define CONFIG_START 32
+// here choose the board that you want to use
 //#define BOARD_FIRMWARE "AltiMultiV2"
 #define BOARD_FIRMWARE "AltiMulti"
 //#define ALTIMULTIV2
 #define ALTIMULTI
 
+//choose the pressure sensor that you are using
+//note that BMP085 and 180 are compatible no need to use the new BMP180 library
+#define BMP085_180
+//#define BMP280
+
 #include "Arduino.h"
+//used for writing in the microcontroleur internal eeprom
 #include <EEPROM.h>
 
 //pyro out 1
@@ -42,7 +49,9 @@ struct ConfigStruct {
   int endRecordAltitude;  // stop recording when landing define under which altitude we are not recording
   int recordTemperature;  //decide if we want to record temparature
   int superSonicDelay;   //nbr of ms during when we ignore any altitude measurements
-  int connectionSpeed;
+  long connectionSpeed;   //altimeter connection baudrate
+  int altimeterResolution; // BMP sensor resolution
+  int eepromSize;
   int cksum;  
 };
 extern ConfigStruct config;
@@ -50,7 +59,8 @@ extern ConfigStruct config;
 extern void defaultConfig();
 extern boolean readAltiConfig();
 extern int getOutPin(int );
-extern int writeAltiConfig( char * );
+extern void writeAltiConfig( char * );
 extern void printAltiConfig();
 extern void writeConfigStruc();
+extern bool CheckValideBaudRate(long);
 #endif

@@ -23,7 +23,6 @@ ConfigStruct config;
 //================================================================
 void defaultConfig()
 {
-  
   config.unit = 0;
   config.beepingMode=0;
   config.outPut1=0;
@@ -40,11 +39,14 @@ void defaultConfig()
   config.endRecordAltitude=3;  // stop recording when landing define under which altitude we are not recording
   config.recordTemperature =0;  //decide if we want to record temperature
   config.superSonicDelay =0;
-  config.connectionSpeed =9600;
+  config.connectionSpeed =57600;
+  config.altimeterResolution = 0; //0 to 4 ie: from low resolution to high
+  config.eepromSize=512;
   config.cksum=0xBA;  
 }
 boolean readAltiConfig() {
-
+	//set the config to default values so that if any have not been configured we can use the default ones
+	defaultConfig();
   int i;
   for( i=0; i< sizeof(config); i++ ) {
     *((char*)&config + i) = EEPROM.read(CONFIG_START + i);
@@ -81,10 +83,10 @@ boolean readAltiConfig() {
 * write the config received by the console
 *
 */
-int writeAltiConfig( char *p ) {
+void writeAltiConfig( char *p ) {
 
   char *str;
-  int i=0;
+  int i=1;
   while ((str = strtok_r(p, ",", &p)) != NULL) // delimiter is the comma
   {
     Serial.println(str);
@@ -124,6 +126,27 @@ int writeAltiConfig( char *p ) {
       config.beepingFrequency =atol(str);
       break;
     case 12:
+      config.nbrOfMeasuresForApogee=atol(str);
+      break;
+    case 13:
+      config.endRecordAltitude=atol(str);
+      break;
+    case 14:
+      config.recordTemperature=atol(str);
+      break;
+    case 15:
+      config.superSonicDelay=atol(str);
+      break;
+    case 16:
+      config.connectionSpeed=atol(str);
+      break;
+    case 17:
+      config.altimeterResolution=atol(str);
+      break;
+    case 18:
+      config.eepromSize =atol(str);
+      break;
+    case 19:
       break;
     }
     i++;
@@ -192,6 +215,61 @@ void printAltiConfig()
   Serial.print(F(","));
   //Beeping frequency
   Serial.print(config.beepingFrequency);
+  Serial.print(F(","));
+  Serial.print(config.nbrOfMeasuresForApogee);
+  Serial.print(F(","));
+  Serial.print(config.endRecordAltitude);
+  Serial.print(F(","));
+  Serial.print(config.recordTemperature);
+  Serial.print(F(","));
+  Serial.print(config.superSonicDelay);
+  Serial.print(F(","));
+  Serial.print(config.connectionSpeed);
+  Serial.print(F(","));
+  Serial.print(config.altimeterResolution);
+  Serial.print(F(","));
+  Serial.print(config.eepromSize);
   Serial.print(F(";\n"));
 
+}
+bool CheckValideBaudRate(long baudRate)
+{
+	bool valid = false;
+	if(baudRate == 300 ||
+			baudRate == 1200 ||
+			baudRate == 2400 ||
+			baudRate == 4800 ||
+			baudRate == 9600 ||
+			baudRate == 14400 ||
+			baudRate == 19200 ||
+			baudRate == 28800 ||
+			baudRate == 38400 ||
+			baudRate == 57600 ||
+			baudRate == 115200 ||
+			baudRate == 230400)
+	  valid = true;
+	return valid;
+}
+long checkEEPromEndAdress(int eepromSize)
+{
+	/*long endAdress=0;
+	switch(eepromSize)
+	{
+	case 64:
+		endAdress =16384;
+		break;
+	case 128:
+		endAdress =16384;
+		break;
+	case 256:
+		endAdress =32768;
+		break;
+	case 512:
+		endAdress =65536;
+		break;
+	case 1024:
+		endAdress =131072;
+		break;
+	}*/
+	return eepromSize*128;
 }
