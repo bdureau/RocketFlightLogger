@@ -42,6 +42,7 @@ void defaultConfig()
   config.connectionSpeed =57600;
   config.altimeterResolution = 0; //0 to 4 ie: from low resolution to high
   config.eepromSize=512;
+  config.noContinuity = 0;
   config.cksum=0xBA;  
 }
 boolean readAltiConfig() {
@@ -86,32 +87,32 @@ boolean readAltiConfig() {
 void writeAltiConfig( char *p ) {
 
   char *str;
-  int i=1;
+  int i=0;
   while ((str = strtok_r(p, ",", &p)) != NULL) // delimiter is the comma
   {
     Serial.println(str);
     switch (i)
     {
     case 1:
-      config.unit =atol(str);
+      config.unit =atoi(str);
       break;
     case 2:
-      config.beepingMode=atol(str);
+      config.beepingMode=atoi(str);
       break;
     case 3:
-      config.outPut1=atol(str);
+      config.outPut1=atoi(str);
       break;   
     case 4:
-      config.outPut2=atol(str);
+      config.outPut2=atoi(str);
       break;
     case 5:
-      config.outPut3=atol(str);
+      config.outPut3=atoi(str);
       break;
     case 6:
-      config.mainAltitude=atol(str);
+      config.mainAltitude=atoi(str);
       break;
     case 7:
-      config.superSonicYesNo=atol(str);
+      config.superSonicYesNo=atoi(str);
       break;
     case 8:
       config.outPut1Delay=atol(str);
@@ -123,30 +124,34 @@ void writeAltiConfig( char *p ) {
       config.outPut3Delay=atol(str);
       break;
     case 11:
-      config.beepingFrequency =atol(str);
+      config.beepingFrequency =atoi(str);
       break;
     case 12:
-      config.nbrOfMeasuresForApogee=atol(str);
+      config.nbrOfMeasuresForApogee=atoi(str);
       break;
     case 13:
       config.endRecordAltitude=atol(str);
       break;
     case 14:
-      config.recordTemperature=atol(str);
+      config.recordTemperature=atoi(str);
       break;
     case 15:
-      config.superSonicDelay=atol(str);
+      config.superSonicDelay=atoi(str);
       break;
     case 16:
       config.connectionSpeed=atol(str);
       break;
     case 17:
-      config.altimeterResolution=atol(str);
+      config.altimeterResolution=atoi(str);
       break;
     case 18:
-      config.eepromSize =atol(str);
+      config.eepromSize =atoi(str);
       break;
     case 19:
+      config.noContinuity=atoi(str);
+      break;
+    case 20:
+    	Serial.print(F("WTF "));
       break;
     }
     i++;
@@ -167,11 +172,18 @@ void writeConfigStruc()
     for( i=0; i<sizeof(config); i++ ) {
       EEPROM.write(CONFIG_START+i, *((char*)&config + i));
     }
+    Serial.print(F("End address: "));
+    Serial.print(CONFIG_START+i);
+    Serial.print(F("EEPROM length: "));
+    Serial.print(EEPROM.length());
 }
 
 void printAltiConfig()
 {
-  readAltiConfig();
+
+  bool ret= readAltiConfig();
+  if(!ret)
+	  Serial.print(F("invalid conf"));
   Serial.print(F("$alticonfig"));
   Serial.print(F(","));
   //Unit
@@ -229,6 +241,8 @@ void printAltiConfig()
   Serial.print(config.altimeterResolution);
   Serial.print(F(","));
   Serial.print(config.eepromSize);
+  Serial.print(F(","));
+  Serial.print(config.noContinuity);
   Serial.print(F(";\n"));
 
 }

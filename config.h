@@ -16,7 +16,7 @@
 //#define BMP280
 
 #include "Arduino.h"
-//used for writing in the microcontroleur internal eeprom
+//used for writing in the microcontroler internal eeprom
 #include <EEPROM.h>
 
 //pyro out 1
@@ -44,14 +44,14 @@ struct ConfigStruct {
   int outPut2Delay;
   int outPut3Delay;
   int beepingFrequency;  // this beeping frequency can be changed
-  //int separationVelocity; // decide at which speed to separate
-  int nbrOfMeasuresForApogee; //how many measure to decide that apogge has been reached
+  int nbrOfMeasuresForApogee; //how many measure to decide that apogee has been reached
   int endRecordAltitude;  // stop recording when landing define under which altitude we are not recording
-  int recordTemperature;  //decide if we want to record temparature
+  int recordTemperature;  //decide if we want to record temperature
   int superSonicDelay;   //nbr of ms during when we ignore any altitude measurements
   long connectionSpeed;   //altimeter connection baudrate
   int altimeterResolution; // BMP sensor resolution
   int eepromSize;
+  int noContinuity;
   int cksum;  
 };
 extern ConfigStruct config;

@@ -275,6 +275,12 @@ void setup()
   digitalWrite(pyroOut3, LOW);
   digitalWrite(pinSpeaker, LOW);
 
+  //enable or disable continuity check
+  if(config.noContinuity==1)
+	  noContinuity=true;
+  else
+	  noContinuity=false;
+
   //initialisation give the version of the altimeter
   //One long beep per major number and One short beep per minor revision
   //For example version 1.2 would be one long beep and 2 short beep
@@ -527,7 +533,7 @@ void recordAltitude()
   unsigned long mainStartTime =0;
   //unsigned long liftoffStartTime=0;
   boolean ignoreAltiMeasure = false;
-  boolean finishedEvent = false;
+ // boolean finishedEvent = false;
   boolean Event1Fired = false;
   boolean Event2Fired = false;
   boolean Event3Fired = false;
@@ -816,7 +822,7 @@ void MainMenu()
   char readVal=' ';
   int i=0;
 
-  char commandbuffer[100];
+  char commandbuffer[200];
 
   Serial.println(F("Rocket flight data logger. A maximum of 25 flight can be logged \n"));
   Serial.println(F("Commands are: \n"));
