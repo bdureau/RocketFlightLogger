@@ -1,8 +1,13 @@
 #include "config.h"
 
 //pyro out 1
+#ifdef ALTIMULTISTM32
+const int pyroOut1 = PA1;//9;
+int pinApogee = PA1;//9;
+#else
 const int pyroOut1 = 9;
 int pinApogee = 9;
+#endif
 //pyro out 2
 #ifdef ALTIMULTIV2
 const int pyroOut2= 12;
@@ -12,11 +17,26 @@ int pinMain = 12;
 const int pyroOut2= 13;
 int pinMain = 13;
 #endif
+#ifdef ALTIMULTISTM32
+const int pyroOut2= PA3;
+int pinMain = PA3;
+#endif
 //pyro out 3
-const int pyroOut3=17;
-int pinOut3 =17;
+#ifdef ALTIMULTISTM32
+const int pyroOut3=PA5; //17;
+int pinOut3 = PA5;//17;
+#else
+const int pyroOut3= 17;
+int pinOut3 = 17;
+#endif
+//pyro out 4
+#ifdef ALTIMULTISTM32
+const int pyroOut4=PA7; 
+int pinOut4 = PA7;
+#endif
 int pinOut2 =-1;
 int pinOut1 =-1;
+int continuityPins[4];
 ConfigStruct config;
 //================================================================
 // read and write in the microcontroler eeprom
@@ -43,6 +63,10 @@ void defaultConfig()
   config.altimeterResolution = 0; //0 to 4 ie: from low resolution to high
   config.eepromSize=512;
   config.noContinuity = 0;
+  #ifdef ALTIMULTISTM32
+  config.outPut4=3;
+  config.outPut4Delay=0;
+  #endif
   config.cksum=0xBA;  
 }
 boolean readAltiConfig() {
@@ -90,7 +114,7 @@ void writeAltiConfig( char *p ) {
   int i=0;
   while ((str = strtok_r(p, ",", &p)) != NULL) // delimiter is the comma
   {
-    Serial.println(str);
+    SerialCom.println(str);
     switch (i)
     {
     case 1:
@@ -150,9 +174,15 @@ void writeAltiConfig( char *p ) {
     case 19:
       config.noContinuity=atoi(str);
       break;
+    #ifdef ALTIMULTISTM32
     case 20:
-    	Serial.print(F("WTF "));
+      config.outPut4=atoi(str);
+      break;  
+    case 21:
+      config.outPut3Delay=atol(str);
+    	//SerialCom.print(F("WTF "));
       break;
+    #endif
     }
     i++;
 
@@ -172,10 +202,10 @@ void writeConfigStruc()
     for( i=0; i<sizeof(config); i++ ) {
       EEPROM.write(CONFIG_START+i, *((char*)&config + i));
     }
-    Serial.print(F("End address: "));
-    Serial.print(CONFIG_START+i);
-    Serial.print(F("EEPROM length: "));
-    Serial.print(EEPROM.length());
+    SerialCom.print(F("End address: "));
+    SerialCom.print(CONFIG_START+i);
+    SerialCom.print(F("EEPROM length: "));
+    //Serial.print(EEPROM.length());
 }
 
 void printAltiConfig()
@@ -183,67 +213,77 @@ void printAltiConfig()
 
   bool ret= readAltiConfig();
   if(!ret)
-	  Serial.print(F("invalid conf"));
-  Serial.print(F("$alticonfig"));
-  Serial.print(F(","));
+	  SerialCom.print(F("invalid conf"));
+  SerialCom.print(F("$alticonfig"));
+  SerialCom.print(F(","));
   //Unit
-  Serial.print(config.unit);
-  Serial.print(F(","));
+  SerialCom.print(config.unit);
+  SerialCom.print(F(","));
   //beepingMode
-  Serial.print(config.beepingMode);
-  Serial.print(F(","));
+  SerialCom.print(config.beepingMode);
+  SerialCom.print(F(","));
   //output1
-  Serial.print(config.outPut1);
-  Serial.print(F(","));
+  SerialCom.print(config.outPut1);
+  SerialCom.print(F(","));
   //output2
-  Serial.print(config.outPut2);
-  Serial.print(F(","));
+  SerialCom.print(config.outPut2);
+  SerialCom.print(F(","));
   //output3
-  Serial.print(config.outPut3);
-  Serial.print(F(","));
+  SerialCom.print(config.outPut3);
+  SerialCom.print(F(","));
   //supersonicYesNo
-  Serial.print(config.superSonicYesNo);
-  Serial.print(F(","));
+  SerialCom.print(config.superSonicYesNo);
+  SerialCom.print(F(","));
   //mainAltitude
-  Serial.print(config.mainAltitude);
-  Serial.print(F(","));
+  SerialCom.print(config.mainAltitude);
+  SerialCom.print(F(","));
   //AltimeterName
-  Serial.print(F(BOARD_FIRMWARE));
-  Serial.print(F(","));
+  SerialCom.print(F(BOARD_FIRMWARE));
+  SerialCom.print(F(","));
   //alti major version
-  Serial.print(MAJOR_VERSION);
+  SerialCom.print(MAJOR_VERSION);
   //alti minor version
-  Serial.print(F(","));
-  Serial.print(MINOR_VERSION);
-  Serial.print(F(","));
+  SerialCom.print(F(","));
+  SerialCom.print(MINOR_VERSION);
+  SerialCom.print(F(","));
   //output1 delay
-  Serial.print(config.outPut1Delay);
-  Serial.print(F(","));
+  SerialCom.print(config.outPut1Delay);
+  SerialCom.print(F(","));
   //output2 delay
-  Serial.print(config.outPut2Delay);
-  Serial.print(F(","));
+  SerialCom.print(config.outPut2Delay);
+  SerialCom.print(F(","));
   //output3 delay
-  Serial.print(config.outPut3Delay);
-  Serial.print(F(","));
+  SerialCom.print(config.outPut3Delay);
+  SerialCom.print(F(","));
   //Beeping frequency
-  Serial.print(config.beepingFrequency);
-  Serial.print(F(","));
-  Serial.print(config.nbrOfMeasuresForApogee);
-  Serial.print(F(","));
-  Serial.print(config.endRecordAltitude);
-  Serial.print(F(","));
-  Serial.print(config.recordTemperature);
-  Serial.print(F(","));
-  Serial.print(config.superSonicDelay);
-  Serial.print(F(","));
-  Serial.print(config.connectionSpeed);
-  Serial.print(F(","));
-  Serial.print(config.altimeterResolution);
-  Serial.print(F(","));
-  Serial.print(config.eepromSize);
-  Serial.print(F(","));
-  Serial.print(config.noContinuity);
-  Serial.print(F(";\n"));
+  SerialCom.print(config.beepingFrequency);
+  SerialCom.print(F(","));
+  SerialCom.print(config.nbrOfMeasuresForApogee);
+  SerialCom.print(F(","));
+  SerialCom.print(config.endRecordAltitude);
+  SerialCom.print(F(","));
+  SerialCom.print(config.recordTemperature);
+  SerialCom.print(F(","));
+  SerialCom.print(config.superSonicDelay);
+  SerialCom.print(F(","));
+  SerialCom.print(config.connectionSpeed);
+  SerialCom.print(F(","));
+  SerialCom.print(config.altimeterResolution);
+  SerialCom.print(F(","));
+  SerialCom.print(config.eepromSize);
+  SerialCom.print(F(","));
+  SerialCom.print(config.noContinuity);
+  
+  #ifdef ALTIMULTISTM32
+  SerialCom.print(F(","));
+  //output4
+  SerialCom.print(config.outPut4);
+  SerialCom.print(F(","));
+   //output4 delay
+  SerialCom.print(config.outPut4Delay);
+  //SerialCom.print(F(","));
+  #endif
+  SerialCom.print(F(";\n"));
 
 }
 bool CheckValideBaudRate(long baudRate)

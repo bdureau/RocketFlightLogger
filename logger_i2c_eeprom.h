@@ -2,6 +2,7 @@
 #define _LOGGER_I2C_EEPROM_H
 
 #include <Wire.h>
+#include "config.h"
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
@@ -69,13 +70,13 @@ public:
     /**
      * Initializes the EEPROM with a default pagesize of I2C_EEPROM_PAGESIZE.
      */
-    logger_I2C_eeprom(int deviceAddress);
-    logger_I2C_eeprom(int deviceAddress, const unsigned int deviceSize);
-int _deviceAddress;
+    logger_I2C_eeprom(uint8_t deviceAddress);
+    logger_I2C_eeprom(uint8_t deviceAddress, const unsigned int deviceSize);
+    uint8_t _deviceAddress;
     void begin();
     void clearFlightList();
-    void write_byte( unsigned int eeaddress, byte data );
-    byte read_byte(  unsigned int eeaddress );
+    void write_byte( unsigned int eeaddress, uint8_t data );
+    uint8_t read_byte(  unsigned int eeaddress );
     int readFlight(int eeaddress);
     int writeFlight(int eeaddress);
     int readFlightList();
