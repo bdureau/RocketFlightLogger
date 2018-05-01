@@ -41,3 +41,5 @@ You will need to use a USB/TTL adapter to connect the altimeter to your computer
 
 # Hardware
 You can either build the Altimulti board as a kit or use an Arduino Uno/Nano/pro and make a shied. You can also use 3 different type of pressure sensors: BMP085, BMP180 or BMP280. To use the BMP280 sensor, you will need to download the appropriate support library and enable/disable some compilation directives.
+The ATMega 328 has 3 pyro output
+As of version 1.16 you can use an STM32 board which has 4 pyro output and a lot of memory. Plan is to use the adittionnal serial ports to have the ability to use GPS modules combin with telemetry.
