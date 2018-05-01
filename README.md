@@ -44,3 +44,4 @@ You can either build the Altimulti board as a kit or use an Arduino Uno/Nano/pro
 The ATMega 328 has 3 pyro output.
 
 As of version 1.16 you can use an STM32 board which has 4 pyro output and a lot of memory. Plan is to use the adittionnal serial ports to have the ability to use GPS modules combin with telemetry.
+<img src="/pictures/proto stm32.jpg" width="49%">
