@@ -38,6 +38,7 @@
 //#define SERIAL_DEBUG
 #undef SERIAL_DEBUG
 
+
 ////////////// config changes end here /////////////
 //////////// do not change anything after unless you know what you are doing /////////////////////
 
@@ -58,14 +59,17 @@
 
 #ifdef ALTIMULTI 
 #define BOARD_FIRMWARE "AltiMulti"
+#define NBR_PYRO_OUT3
 #endif
 
 #ifdef ALTIMULTIV2
 #define BOARD_FIRMWARE "AltiMultiV2"
+#define NBR_PYRO_OUT3
 #endif
 
 #ifdef ALTIMULTISTM32
 #define BOARD_FIRMWARE "AltiMultiSTM32"
+#define NBR_PYRO_OUT4
 #endif
 
 

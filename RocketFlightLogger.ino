@@ -156,9 +156,12 @@ const int pinChannel1Continuity = PA2;
 const int pinChannel2Continuity = PA4;
 // third output
 const int pinChannel3Continuity = PA6;
+#ifdef NBR_PYRO_OUT4
 // fourth output
 const int pinChannel4Continuity = PB0;
 #endif
+#endif
+
 #ifdef ALTIMULTI
 //by default apogee pin
 const int pinChannel1Continuity = 10;
@@ -185,7 +188,7 @@ boolean canRecord = true;
 boolean timerEvent1_enable = false;
 boolean timerEvent2_enable = false;
 boolean timerEvent3_enable = false;
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
 boolean timerEvent4_enable = false;
 #endif
 boolean apogeeEvent_Enable = false;
@@ -194,7 +197,7 @@ boolean mainEvent_Enable = false;
 boolean out1Enable = true;
 boolean out2Enable = true;
 boolean out3Enable = true;
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
 boolean out4Enable = true;
 #endif
 
@@ -203,13 +206,13 @@ int mainDelay = 0;
 int out1Delay = 0;
 int out2Delay = 0;
 int out3Delay = 0;
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
 int out4Delay = 0;
 #endif
 boolean Output1Fired = false;
 boolean Output2Fired = false;
 boolean Output3Fired = false;
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
 boolean Output4Fired = false;
 #endif
 
@@ -325,7 +328,7 @@ void setup()
   pinMode(pyroOut1, OUTPUT);
   pinMode(pyroOut2, OUTPUT);
   pinMode(pyroOut3, OUTPUT);
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
   pinMode(pyroOut4, OUTPUT);
 #endif
   pinMode(pinSpeaker, OUTPUT);
@@ -336,7 +339,7 @@ void setup()
   pinMode(pinChannel1Continuity , INPUT);
   pinMode(pinChannel2Continuity , INPUT);
   pinMode(pinChannel3Continuity , INPUT);
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
   pinMode(pinChannel4Continuity , INPUT);
 #endif
 
@@ -344,7 +347,7 @@ void setup()
   digitalWrite(pyroOut1, LOW);
   digitalWrite(pyroOut2, LOW);
   digitalWrite(pyroOut3, LOW);
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
   digitalWrite(pyroOut4, LOW);
 #endif
   digitalWrite(pinSpeaker, LOW);
@@ -457,7 +460,7 @@ void setup()
     pos++;
     continuityPins[pos] = pinChannel3Continuity;
   }
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
   if (out4Enable)  {
     pos++;
     continuityPins[pos] = pinChannel4Continuity;
@@ -482,7 +485,7 @@ void assignPyroOutputs()
   pinOut1 = -1;
   pinOut2 = -1;
   pinOut3 = -1;
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
   pinOut4 = -1;
 #endif
 
@@ -551,7 +554,7 @@ void assignPyroOutputs()
       out3Enable = false;
       break;
   }
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
   //output 4
   switch (config.outPut4)
   {
@@ -602,7 +605,7 @@ void setEventState(int pyroOut, boolean state)
     SerialCom.println(F("Output3Fired"));
 #endif
   }
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
   if (pyroOut == pyroOut4)
   {
     Output4Fired = state;
@@ -680,7 +683,7 @@ void recordAltitude()
   boolean Event1Fired = false;
   boolean Event2Fired = false;
   boolean Event3Fired = false;
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
   boolean Event4Fired = false;
 #endif
   boolean MainFiredComplete = false;
@@ -688,7 +691,7 @@ void recordAltitude()
   if (out1Enable == false) Output1Fired = true;
   if (out2Enable == false) Output2Fired = true;
   if (out3Enable == false) Output3Fired = true;
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
   if (out4Enable == false) Output4Fired = true;
 #endif
 
@@ -698,14 +701,14 @@ void recordAltitude()
   if (pinOut1 == -1) SerialCom.println(F("pinOut1 disable\n"));
   if (pinOut2 == -1) SerialCom.println(F("pinOut2 disable\n"));
   if (pinOut3 == -1) SerialCom.println(F("pinOut3 disable\n"));
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
   if (pinOut4 == -1) SerialCom.println(F("pinOut4 disable\n"));
 #endif
   SerialCom.println(F("Config delay:"));
   SerialCom.println(config.outPut1Delay);
   SerialCom.println(config.outPut2Delay);
   SerialCom.println(config.outPut3Delay);
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
   SerialCom.println(config.outPut4Delay);
 #endif
 
@@ -827,7 +830,7 @@ void recordAltitude()
 #endif
           }
         }
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
         if (timerEvent4_enable && Event4Fired == false)
         {
           if (currentTime >= config.outPut4Delay)
@@ -974,7 +977,7 @@ void recordAltitude()
           liftOff = false;
           SendTelemetry(millis() - initialTime);
         }
-#ifdef ALTIMULTISTM32
+#ifdef NBR_PYRO_OUT4
         if (Output1Fired == true && Output2Fired == true && Output3Fired == true && Output4Fired == true)
 #else
         if (Output1Fired == true && Output2Fired == true && Output3Fired == true )

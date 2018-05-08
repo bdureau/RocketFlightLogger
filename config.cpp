@@ -63,7 +63,7 @@ void defaultConfig()
   config.altimeterResolution = 0; //0 to 4 ie: from low resolution to high
   config.eepromSize=512;
   config.noContinuity = 0;
-  #ifdef ALTIMULTISTM32
+  #ifdef NBR_PYRO_OUT4
   config.outPut4=3;
   config.outPut4Delay=0;
   #endif
@@ -174,12 +174,12 @@ void writeAltiConfig( char *p ) {
     case 19:
       config.noContinuity=atoi(str);
       break;
-    #ifdef ALTIMULTISTM32
+    #ifdef NBR_PYRO_OUT4
     case 20:
       config.outPut4=atoi(str);
       break;  
     case 21:
-      config.outPut3Delay=atol(str);
+      config.outPut4Delay=atol(str);
     	//SerialCom.print(F("WTF "));
       break;
     #endif
@@ -274,7 +274,7 @@ void printAltiConfig()
   SerialCom.print(F(","));
   SerialCom.print(config.noContinuity);
   
-  #ifdef ALTIMULTISTM32
+  #ifdef NBR_PYRO_OUT4
   SerialCom.print(F(","));
   //output4
   SerialCom.print(config.outPut4);
