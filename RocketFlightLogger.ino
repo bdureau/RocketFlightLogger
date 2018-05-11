@@ -65,6 +65,9 @@
   Major changes on version 1.16
   added assynchronous delay
   added smt32 port
+
+  Major changes on version 1.17
+
 */
 
 //altimeter configuration lib
@@ -276,7 +279,7 @@ void setup()
     config.connectionSpeed = 57600;
     writeConfigStruc();
   }
- 
+
   // set main altitude (if in feet convert to metrics)
   if (config.unit == 0)
     FEET_IN_METER = 1;
@@ -466,17 +469,7 @@ void setup()
     continuityPins[pos] = pinChannel4Continuity;
   }
 #endif
-  /*SerialCom.print("Number of pyro enabled:");
-    SerialCom.println(pos);
-
-    SerialCom.print("pinChannel1Continuity:");
-    SerialCom.println(pinChannel1Continuity);
-    SerialCom.print("pinChannel2Continuity:");
-    SerialCom.println(pinChannel2Continuity);
-    SerialCom.print("pinChannel3Continuity:");
-    SerialCom.println(pinChannel3Continuity);
-    SerialCom.print("pinChannel4Continuity:");
-    SerialCom.println(pinChannel4Continuity);*/
+  
 }
 void assignPyroOutputs()
 {
@@ -1028,25 +1021,37 @@ void MainMenu()
         SendTelemetry(millis() - initialTime);
       if (( currAltitude > liftoffAltitude) != true)
       {
-        /*if(out1Enable)
-          continuityCheck(pinChannel1Continuity);
-          if(out2Enable)
-          continuityCheck(pinChannel2Continuity);
-          if(out3Enable)
-          continuityCheck(pinChannel3Continuity);
-          if(out4Enable)
-          continuityCheck(pinChannel4Continuity);  */
         continuityCheckNew();
-        //delay (500);
       }
       else
       {
         recordAltitude();
       }
-      if (apogeeHasFired == true && mainHasFired == true)
+      long savedTime = millis();
+      while (apogeeHasFired == true && mainHasFired == true)
       {
-        while (1)
+
+        // check if we have anything on the serial port
+        if (SerialCom.available())
         {
+          readVal = SerialCom.read();
+          if (readVal != ';' )
+          {
+            if (readVal != '\n')
+              commandbuffer[i++] = readVal;
+          }
+          else
+          {
+            commandbuffer[i++] = '\0';
+            resetFlight();
+            interpretCommandBuffer(commandbuffer);
+          }
+        }
+
+
+        //beep last altitude every 10 second
+        while ((millis() - savedTime) > 10000) {
+
           beginBeepSeq();
 
           if (config.beepingMode == 0)
@@ -1060,12 +1065,11 @@ void MainMenu()
           else
             beepAltitudeNew(mainAltitude * FEET_IN_METER);
 
-          //wait 10s
-          delay(10000);
+          savedTime = millis();
         }
       }
     }
-    //if(Serial.available())
+
     while (SerialCom.available())
     {
       readVal = SerialCom.read();
@@ -1081,6 +1085,11 @@ void MainMenu()
       }
     }
   }
+  interpretCommandBuffer(commandbuffer);
+}
+
+
+void interpretCommandBuffer(char *commandbuffer) {
   SerialCom.println((char*)commandbuffer);
   //this will erase all flight
   if (commandbuffer[0] == 'e')
@@ -1209,6 +1218,10 @@ void MainMenu()
     writeConfigStruc();
     SerialCom.print(F("config reseted\n"));
   }
+  else if (commandbuffer[0] == 'i')
+  {
+    //exit continuity mode
+  }
   else if (commandbuffer[0] == ' ')
   {
     SerialCom.print(F("$K0;\n"));
@@ -1223,8 +1236,31 @@ void MainMenu()
   }
 }
 
+void resetFlight() {
+  // re-nitialise all flight related global variables
+  apogeeHasFired = false;
+  mainHasFired = false;
+  liftOff = false;
+  Output1Fired = false;
+  Output2Fired = false;
+  Output3Fired = false;
+#ifdef NBR_PYRO_OUT4
+  Output4Fired = false;
+#endif
 
-
-
+logger.readFlightList();
+long lastFlightNbr = logger.getLastFlightNbr();
+if (lastFlightNbr < 0)
+  {
+    currentFileNbr = 0;
+    currentMemaddress = 201;
+  }
+  else
+  {
+    currentMemaddress = logger.getFlightStop(lastFlightNbr) + 1;
+    currentFileNbr = lastFlightNbr + 1;
+  }
+canRecord = logger.CanRecord();
+}
 
 
