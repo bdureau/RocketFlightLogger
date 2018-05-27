@@ -1,5 +1,5 @@
 /*
-  Rocket Flight Logger ver 1.16
+  Rocket Flight Logger ver 1.17
   Copyright Boris du Reau 2012-2018
 
   The following is a datalogger for logging rocket flight.
@@ -64,10 +64,12 @@
   Clean up
   Major changes on version 1.16
   added assynchronous delay
-  added smt32 port
-
+  added STM32 port
   Major changes on version 1.17
-
+  fixes
+  Major changes on version 1.18
+  added altimeter status
+  low battery alarm (only for STM32 boards)
 */
 
 //altimeter configuration lib
@@ -136,8 +138,8 @@ unsigned long mainDeployAltitude;
 
 // pin used by the jumpers
 #ifdef ALTIMULTISTM32
-const int pinAltitude1 = PB14;
-const int pinAltitude2 = PB15;
+const int pinAltitude1 = PB3;
+const int pinAltitude2 = PB4;
 #endif
 #ifdef ALTIMULTI
 const int pinAltitude1 = 8;
@@ -610,6 +612,7 @@ void setEventState(int pyroOut, boolean state)
 }
 
 void SendTelemetry(long sampleTime) {
+  int val = 0;
   //check liftoff
   int li = 0;
   if (liftOff)
@@ -643,6 +646,65 @@ void SendTelemetry(long sampleTime) {
   SerialCom.print(landed);
   SerialCom.print(F(","));
   SerialCom.print(sampleTime);
+  SerialCom.print(F(","));
+  if(out1Enable) {
+    //check continuity
+     val = digitalRead(pinChannel1Continuity);
+     if (val == 0)
+      SerialCom.print(0);  
+     else   
+      SerialCom.print(1);  
+  }
+  else {
+    SerialCom.print(-1);
+  }
+  SerialCom.print(F(","));
+  if(out2Enable) {
+     //check continuity
+     val = digitalRead(pinChannel2Continuity);
+     delay(20);
+     if (val == 0)
+      SerialCom.print(0);  
+     else   
+      SerialCom.print(1);
+  }
+  else {
+    SerialCom.print(-1);
+  }
+  SerialCom.print(F(","));
+if(out3Enable) {
+     //check continuity
+     val = digitalRead(pinChannel3Continuity);
+     if (val == 0)
+      SerialCom.print(0);  
+     else   
+      SerialCom.print(1);
+  }
+  else {
+    SerialCom.print(-1);
+  }
+  #ifdef NBR_PYRO_OUT4
+  SerialCom.print(F(","));
+  if(out4Enable) {
+     //check continuity
+     val = digitalRead(pinChannel4Continuity);
+     //delay(20);
+     if (val == 0)
+      SerialCom.print(0);  
+     else   
+      SerialCom.print(1);
+  }
+  else {
+    SerialCom.print(-1);
+  }
+  #endif
+  #ifdef ALTIMULTISTM32
+  SerialCom.print(F(","));
+  pinMode(PB1, INPUT_ANALOG);
+  int batVoltage = analogRead(PB1); 
+  //float bat =((batVoltage*3300)/4096)/100;
+  SerialCom.print(batVoltage);
+  #endif
   SerialCom.println(F(";"));
 }
 //================================================================
@@ -1022,6 +1084,8 @@ void MainMenu()
       if (( currAltitude > liftoffAltitude) != true)
       {
         continuityCheckNew();
+        SendTelemetry(0);
+        checkBatVoltage(7.0);
       }
       else
       {
@@ -1263,4 +1327,22 @@ if (lastFlightNbr < 0)
 canRecord = logger.CanRecord();
 }
 
+void checkBatVoltage(float minVolt) {
+  #ifdef ALTIMULTISTM32
+  pinMode(PB1, INPUT_ANALOG);
+  int batVoltage = analogRead(PB1); 
+  float bat =3.05*((float)(batVoltage*3300)/(float)4096000);
+  //SerialCom.println(bat);
+  if(bat < minVolt) {
+    for (int i = 0; i < 10; i++)
+    {
+      tone(pinSpeaker, 1600, 1000);
+      delay(50);
+      noTone(pinSpeaker);
+    }
+    delay(1000);
+  }
+  #endif
+
+}
 

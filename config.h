@@ -43,7 +43,7 @@
 //////////// do not change anything after unless you know what you are doing /////////////////////
 
 #define MAJOR_VERSION 1
-#define MINOR_VERSION 17
+#define MINOR_VERSION 18
 #define CONFIG_START 32
 
 #ifdef ALTIMULTISTM32
