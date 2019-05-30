@@ -59,7 +59,7 @@ void defaultConfig()
   config.endRecordAltitude=3;  // stop recording when landing define under which altitude we are not recording
   config.recordTemperature =0;  //decide if we want to record temperature
   config.superSonicDelay =0;
-  config.connectionSpeed =57600;
+  config.connectionSpeed =38400;
   config.altimeterResolution = 0; //0 to 4 ie: from low resolution to high
   config.eepromSize=512;
   config.noContinuity = 0;
@@ -67,7 +67,7 @@ void defaultConfig()
   config.outPut4=3;
   config.outPut4Delay=0;
   #endif
-  config.cksum=0xBA;  
+  config.cksum=CheckSumConf(config);   
 }
 boolean readAltiConfig() {
 	//set the config to default values so that if any have not been configured we can use the default ones
@@ -77,7 +77,7 @@ boolean readAltiConfig() {
     *((char*)&config + i) = EEPROM.read(CONFIG_START + i);
   }
 
-  if ( config.cksum != 0xBA ) {
+  if ( config.cksum != CheckSumConf(config) ) {
     return false;
   }
 
@@ -188,7 +188,7 @@ void writeAltiConfig( char *p ) {
 
   }
 
-  config.cksum = 0xBA;
+  config.cksum = CheckSumConf(config);
 
   /*for( i=0; i<sizeof(config); i++ ) {
     EEPROM.write(CONFIG_START+i, *((char*)&config + i));
@@ -327,3 +327,14 @@ long checkEEPromEndAdress(int eepromSize)
 	}*/
 	return eepromSize*128;
 }
+
+unsigned int CheckSumConf( ConfigStruct cnf)
+ {
+     int i;
+     unsigned int chk=0;
+    
+     for (i=0; i < (sizeof(cnf)-2); i++) 
+     chk += *((char*)&cnf + i);
+    
+     return chk;
+ }

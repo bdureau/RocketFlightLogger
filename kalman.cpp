@@ -57,6 +57,3 @@ float KalmanCalc (float altitude)
   //KAlt = kalman_x; //FLOAT Kalman-filtered altitude value
   return kalman_x;
 }  
-
-
-
