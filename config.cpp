@@ -59,7 +59,7 @@ void defaultConfig()
   config.endRecordAltitude=3;  // stop recording when landing define under which altitude we are not recording
   config.recordTemperature =0;  //decide if we want to record temperature
   config.superSonicDelay =0;
-  config.connectionSpeed =57600;
+  config.connectionSpeed =38400;
   config.altimeterResolution = 0; //0 to 4 ie: from low resolution to high
   config.eepromSize=512;
   config.noContinuity = 0;
