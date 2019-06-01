@@ -22,7 +22,7 @@ It is possible to use a terminal to send some sort of AT command to the altimete
 # Talking to the altimeter using graphical user interfaces
 A couple of software can used with the board:
 - a Java interface that can be run on any machine that can run Java
-- an Android application that can run on any Android device that is running at least Android 4.2 
+- an Android application that can run on any Android device that is running at least Android 4.2. The application is called [BearConsole]https://github.com/bdureau/BearConsole2
 
 # Communicating with the altimeter board
 The AltiMulti board can communicate using the serial connector. On the serial connector you can plug several devices:
@@ -40,8 +40,8 @@ Make sure that you download the [support library](https://github.com/bdureau/Alt
 You will need to use a USB/TTL adapter to connect the altimeter to your computer, refer to the documentation.
 
 # Hardware
-You can either build the Altimulti board as a kit or use an Arduino Uno/Nano/pro and make a shied. You can also use 3 different type of pressure sensors: BMP085, BMP180 or BMP280. To use the BMP280 sensor, you will need to download the appropriate support library and enable/disable some compilation directives.
-The ATMega 328 has 3 pyro output.
+You can either build the Altimulti board as a kit or use an Arduino Uno/Nano/pro and make a shield. You can also use 3 different type of pressure sensors: BMP085, BMP180 or BMP280. To use the BMP280 sensor, you will need to download the appropriate support library and enable/disable some compilation directives.
+The ATMega 328 version has 3 pyro output.
 
-As of version 1.16 you can use an STM32 board which has 4 pyro output and a lot of memory. Plan is to use the adittionnal serial ports to have the ability to use GPS modules combin with telemetry.
+As of version 1.16 you can use an STM32 board which has 4 pyro output and a lot of memory. Plan is to use the additionnal serial ports to have the ability to use GPS modules combined with telemetry.
 <img src="/pictures/proto stm32.jpg" width="49%">
