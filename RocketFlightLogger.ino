@@ -1,6 +1,6 @@
 /*
-  Rocket Flight Logger ver 1.17
-  Copyright Boris du Reau 2012-2018
+  Rocket Flight Logger ver 1.18
+  Copyright Boris du Reau 2012-2019
 
   The following is a datalogger for logging rocket flight.
   So far it can log the rocket altitude during the flight.
@@ -70,6 +70,10 @@
   Major changes on version 1.18
   added altimeter status
   low battery alarm (only for STM32 boards)
+  Major changes on version 1.19
+  bug fixes
+  added the ability to turn off telemetry
+  added config checksum calculation
 */
 
 //altimeter configuration lib
@@ -114,8 +118,6 @@ BMP085 bmp;
 
 logger_I2C_eeprom logger(0x50) ;
 long endAddress = 65536;
-//long BAUD_RATE=57600;
-//long BAUD_RATE=38400;
 
 //ground level altitude
 long initialAltitude;
@@ -227,6 +229,8 @@ int currentFileNbr = 0;
 // EEPROM start adress for the flights. Anything before that is the flight index
 long currentMemaddress = 200;
 
+boolean telemetryEnable = false;
+
 void assignPyroOutputs();
 void MainMenu();
 
@@ -278,7 +282,7 @@ void setup()
   // if the baud rate is invalid let's default it
   if (!CheckValideBaudRate(config.connectionSpeed))
   {
-    config.connectionSpeed = 57600;
+    config.connectionSpeed = 38400;
     writeConfigStruc();
   }
 
@@ -368,8 +372,7 @@ void setup()
   //For example version 1.2 would be one long beep and 2 short beep
   beepAltiVersion(MAJOR_VERSION, MINOR_VERSION);
 
-  //number of measures to do to detect Apogee
-  measures = 5; //NBR_MEASURE_APOGEE;
+  
 
   if (!softConfigValid)
   {
@@ -399,6 +402,9 @@ void setup()
       mainDeployAltitude = 200;
     }
   }
+  
+   //number of measures to do to detect Apogee
+    measures = config.nbrOfMeasuresForApogee;
 
   // let's do some dummy altitude reading
   // to initialise the Kalman filter
@@ -471,7 +477,7 @@ void setup()
     continuityPins[pos] = pinChannel4Continuity;
   }
 #endif
-  
+
 }
 void assignPyroOutputs()
 {
@@ -612,100 +618,102 @@ void setEventState(int pyroOut, boolean state)
 }
 
 void SendTelemetry(long sampleTime) {
-  int val = 0;
-  //check liftoff
-  int li = 0;
-  if (liftOff)
-    li = 1;
+  if (telemetryEnable) {
+    int val = 0;
+    //check liftoff
+    int li = 0;
+    if (liftOff)
+      li = 1;
 
-  //check apogee
-  int ap = 0;
-  if (apogeeHasFired)
-    ap = 1;
+    //check apogee
+    int ap = 0;
+    if (apogeeHasFired)
+      ap = 1;
 
-  //check main
-  int ma = 0;
-  if (mainHasFired)
-    ma = 1;
-  int landed = 0;
-  if ( mainHasFired && currAltitude < 10)
-    landed = 1;
-  SerialCom.print(F("$telemetry,"));
-  SerialCom.print(currAltitude);
-  SerialCom.print(F(","));
-  SerialCom.print(li);
-  SerialCom.print(F(","));
-  SerialCom.print(ap);
-  SerialCom.print(F(","));
-  SerialCom.print(apogeeAltitude);
-  SerialCom.print(F(","));
-  SerialCom.print(ma);
-  SerialCom.print(F(","));
-  SerialCom.print(mainAltitude);
-  SerialCom.print(F(","));
-  SerialCom.print(landed);
-  SerialCom.print(F(","));
-  SerialCom.print(sampleTime);
-  SerialCom.print(F(","));
-  if(out1Enable) {
-    //check continuity
-     val = digitalRead(pinChannel1Continuity);
-     if (val == 0)
-      SerialCom.print(0);  
-     else   
-      SerialCom.print(1);  
+    //check main
+    int ma = 0;
+    if (mainHasFired)
+      ma = 1;
+    int landed = 0;
+    if ( mainHasFired && currAltitude < 10)
+      landed = 1;
+    SerialCom.print(F("$telemetry,"));
+    SerialCom.print(currAltitude);
+    SerialCom.print(F(","));
+    SerialCom.print(li);
+    SerialCom.print(F(","));
+    SerialCom.print(ap);
+    SerialCom.print(F(","));
+    SerialCom.print(apogeeAltitude);
+    SerialCom.print(F(","));
+    SerialCom.print(ma);
+    SerialCom.print(F(","));
+    SerialCom.print(mainAltitude);
+    SerialCom.print(F(","));
+    SerialCom.print(landed);
+    SerialCom.print(F(","));
+    SerialCom.print(sampleTime);
+    SerialCom.print(F(","));
+    if (out1Enable) {
+      //check continuity
+      val = digitalRead(pinChannel1Continuity);
+      if (val == 0)
+        SerialCom.print(0);
+      else
+        SerialCom.print(1);
+    }
+    else {
+      SerialCom.print(-1);
+    }
+    SerialCom.print(F(","));
+    if (out2Enable) {
+      //check continuity
+      val = digitalRead(pinChannel2Continuity);
+      delay(20);
+      if (val == 0)
+        SerialCom.print(0);
+      else
+        SerialCom.print(1);
+    }
+    else {
+      SerialCom.print(-1);
+    }
+    SerialCom.print(F(","));
+    if (out3Enable) {
+      //check continuity
+      val = digitalRead(pinChannel3Continuity);
+      if (val == 0)
+        SerialCom.print(0);
+      else
+        SerialCom.print(1);
+    }
+    else {
+      SerialCom.print(-1);
+    }
+#ifdef NBR_PYRO_OUT4
+    SerialCom.print(F(","));
+    if (out4Enable) {
+      //check continuity
+      val = digitalRead(pinChannel4Continuity);
+      //delay(20);
+      if (val == 0)
+        SerialCom.print(0);
+      else
+        SerialCom.print(1);
+    }
+    else {
+      SerialCom.print(-1);
+    }
+#endif
+#ifdef ALTIMULTISTM32
+    SerialCom.print(F(","));
+    pinMode(PB1, INPUT_ANALOG);
+    int batVoltage = analogRead(PB1);
+    //float bat =((batVoltage*3300)/4096)/100;
+    SerialCom.print(batVoltage);
+#endif
+    SerialCom.println(F(";"));
   }
-  else {
-    SerialCom.print(-1);
-  }
-  SerialCom.print(F(","));
-  if(out2Enable) {
-     //check continuity
-     val = digitalRead(pinChannel2Continuity);
-     delay(20);
-     if (val == 0)
-      SerialCom.print(0);  
-     else   
-      SerialCom.print(1);
-  }
-  else {
-    SerialCom.print(-1);
-  }
-  SerialCom.print(F(","));
-if(out3Enable) {
-     //check continuity
-     val = digitalRead(pinChannel3Continuity);
-     if (val == 0)
-      SerialCom.print(0);  
-     else   
-      SerialCom.print(1);
-  }
-  else {
-    SerialCom.print(-1);
-  }
-  #ifdef NBR_PYRO_OUT4
-  SerialCom.print(F(","));
-  if(out4Enable) {
-     //check continuity
-     val = digitalRead(pinChannel4Continuity);
-     //delay(20);
-     if (val == 0)
-      SerialCom.print(0);  
-     else   
-      SerialCom.print(1);
-  }
-  else {
-    SerialCom.print(-1);
-  }
-  #endif
-  #ifdef ALTIMULTISTM32
-  SerialCom.print(F(","));
-  pinMode(PB1, INPUT_ANALOG);
-  int batVoltage = analogRead(PB1); 
-  //float bat =((batVoltage*3300)/4096)/100;
-  SerialCom.print(batVoltage);
-  #endif
-  SerialCom.println(F(";"));
 }
 //================================================================
 // Main loop which call the menu
@@ -938,7 +946,7 @@ void recordAltitude()
         else
         {
           lastAltitude = currAltitude;
-          measures = 5;
+          measures = config.nbrOfMeasuresForApogee;
         }
         if (apogeeReadyToFire)
         {
@@ -1286,6 +1294,51 @@ void interpretCommandBuffer(char *commandbuffer) {
   {
     //exit continuity mode
   }
+  //turn on or off the selected output
+  else if (commandbuffer[0] == 'k')
+  {
+    char temp[2];
+    boolean fire = true;
+
+    temp[0] = commandbuffer[1];
+    temp[1] = '\0';
+    if (commandbuffer[2] == 'F')
+      fire = false;
+
+    if (atol(temp) > -1)
+    {
+      switch (atoi(temp))
+      {
+        case 1:
+          fireOutput(pyroOut1, fire);
+          break;
+        case 2:
+          fireOutput(pyroOut2, fire);
+          break;
+        case 3:
+          fireOutput(pyroOut3, fire);
+          break;
+#ifdef NBR_PYRO_OUT4
+        case 4:
+          fireOutput(pyroOut4, fire);
+          break;
+#endif
+      }
+    }
+  }
+  //telemetry on/off
+  else if (commandbuffer[0] == 'y')
+  {
+    if (commandbuffer[1] == '1') {
+      SerialCom.print(F("Telemetry enabled\n"));
+      telemetryEnable = true;
+    }
+    else {
+      SerialCom.print(F("Telemetry disabled\n"));
+      telemetryEnable = false;
+    }
+    SerialCom.print(F("$OK;\n"));
+  }
   else if (commandbuffer[0] == ' ')
   {
     SerialCom.print(F("$K0;\n"));
@@ -1312,9 +1365,9 @@ void resetFlight() {
   Output4Fired = false;
 #endif
 
-logger.readFlightList();
-long lastFlightNbr = logger.getLastFlightNbr();
-if (lastFlightNbr < 0)
+  logger.readFlightList();
+  long lastFlightNbr = logger.getLastFlightNbr();
+  if (lastFlightNbr < 0)
   {
     currentFileNbr = 0;
     currentMemaddress = 201;
@@ -1324,16 +1377,17 @@ if (lastFlightNbr < 0)
     currentMemaddress = logger.getFlightStop(lastFlightNbr) + 1;
     currentFileNbr = lastFlightNbr + 1;
   }
-canRecord = logger.CanRecord();
+  canRecord = logger.CanRecord();
 }
 
 void checkBatVoltage(float minVolt) {
-  #ifdef ALTIMULTISTM32
+#ifdef ALTIMULTISTM32
   pinMode(PB1, INPUT_ANALOG);
-  int batVoltage = analogRead(PB1); 
-  float bat =3.05*((float)(batVoltage*3300)/(float)4096000);
-  //SerialCom.println(bat);
-  if(bat < minVolt) {
+  int batVoltage = analogRead(PB1);
+  float bat = 3.05 * ((float)(batVoltage * 3300) / (float)4096000);
+  //float bat =10*((float)(batVoltage*3300)/(float)4096000);
+  SerialCom.println(bat);
+  if (bat < minVolt) {
     for (int i = 0; i < 10; i++)
     {
       tone(pinSpeaker, 1600, 1000);
@@ -1342,7 +1396,12 @@ void checkBatVoltage(float minVolt) {
     }
     delay(1000);
   }
-  #endif
+#endif
 
 }
-
+void fireOutput(int pin, boolean fire) {
+  if (fire)
+    digitalWrite(pin, LOW);
+  else
+    digitalWrite(pin, HIGH);
+}
