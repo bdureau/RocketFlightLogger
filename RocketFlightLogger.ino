@@ -1401,7 +1401,7 @@ void checkBatVoltage(float minVolt) {
 }
 void fireOutput(int pin, boolean fire) {
   if (fire)
-    digitalWrite(pin, LOW);
-  else
     digitalWrite(pin, HIGH);
+  else
+    digitalWrite(pin, LOW);
 }
