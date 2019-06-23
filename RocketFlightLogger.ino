@@ -1,5 +1,5 @@
 /*
-  Rocket Flight Logger ver 1.18
+  Rocket Flight Logger ver 1.19
   Copyright Boris du Reau 2012-2019
 
   The following is a datalogger for logging rocket flight.
@@ -306,6 +306,7 @@ void setup()
   //and change it to 57600, 115200 etc..
   //Serial.begin(BAUD_RATE);
   SerialCom.begin(config.connectionSpeed);
+  //SerialCom.begin(38400);
 
   //  pinMode(A0, INPUT);
 
@@ -704,6 +705,9 @@ void SendTelemetry(long sampleTime) {
     else {
       SerialCom.print(-1);
     }
+#else
+  SerialCom.print(F(","));
+  SerialCom.print(-1);
 #endif
 #ifdef ALTIMULTISTM32
     SerialCom.print(F(","));
@@ -711,7 +715,15 @@ void SendTelemetry(long sampleTime) {
     int batVoltage = analogRead(PB1);
     //float bat =((batVoltage*3300)/4096)/100;
     SerialCom.print(batVoltage);
+#else
+  SerialCom.print(F(","));
+  SerialCom.print(-1);
 #endif
+// temperature
+SerialCom.print(F(","));
+    float temperature;
+    temperature = bmp.readTemperature();
+    SerialCom.print((int)temperature );
     SerialCom.println(F(";"));
   }
 }
@@ -1258,7 +1270,7 @@ void interpretCommandBuffer(char *commandbuffer) {
   {
     writeAltiConfig(commandbuffer);
   }
-  //reset alti config
+  //reset alti config this is equal to t why do I have 2 !!!!
   else if (commandbuffer[0] == 'd')
   {
     defaultConfig();
@@ -1283,6 +1295,7 @@ void interpretCommandBuffer(char *commandbuffer) {
     //FastReading = false;
     SerialCom.print(F("$OK;\n"));
   }
+  //reset config and set it to default
   else if (commandbuffer[0] == 't')
   {
     //reset config
@@ -1290,6 +1303,7 @@ void interpretCommandBuffer(char *commandbuffer) {
     writeConfigStruc();
     SerialCom.print(F("config reseted\n"));
   }
+  // unused
   else if (commandbuffer[0] == 'i')
   {
     //exit continuity mode
@@ -1339,6 +1353,7 @@ void interpretCommandBuffer(char *commandbuffer) {
     }
     SerialCom.print(F("$OK;\n"));
   }
+  // empty command
   else if (commandbuffer[0] == ' ')
   {
     SerialCom.print(F("$K0;\n"));

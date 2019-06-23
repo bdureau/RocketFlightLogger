@@ -5,13 +5,13 @@
 const int pyroOut1 = PA1;//9;
 int pinApogee = PA1;//9;
 #else
-const int pyroOut1 = 9;
-int pinApogee = 9;
+const int pyroOut1 =12;// 9;
+int pinApogee = 12; //9;
 #endif
 //pyro out 2
 #ifdef ALTIMULTIV2
-const int pyroOut2= 12;
-int pinMain = 12;
+const int pyroOut2= 9;//12;
+int pinMain = 9;//12;
 #endif
 #ifdef ALTIMULTI
 const int pyroOut2= 13;
@@ -68,6 +68,7 @@ void defaultConfig()
   config.outPut4Delay=0;
   #endif
   config.cksum=CheckSumConf(config);   
+  //config.cksum=0xBA; 
 }
 boolean readAltiConfig() {
 	//set the config to default values so that if any have not been configured we can use the default ones
@@ -78,6 +79,7 @@ boolean readAltiConfig() {
   }
 
   if ( config.cksum != CheckSumConf(config) ) {
+  //if ( config.cksum != 0xBA ) {
     return false;
   }
 
@@ -333,7 +335,8 @@ unsigned int CheckSumConf( ConfigStruct cnf)
      int i;
      unsigned int chk=0;
     
-     for (i=0; i < (sizeof(cnf)-2); i++) 
+     //for (i=0; i < (sizeof(cnf)-2); i++) 
+     for (i=0; i < (sizeof(cnf)-sizeof(int)); i++) 
      chk += *((char*)&cnf + i);
     
      return chk;
