@@ -49,6 +49,7 @@
 struct FlightDataStruct {
   long diffTime;
   long altitude;
+  long temperature;
   
 };
 struct FlightConfigStruct {
@@ -88,6 +89,7 @@ public:
     void setFlightTimeData( long difftime);
     long getFlightTimeData();
     void setFlightAltitudeData( long altitude);
+    void setFlightTemperatureData (long temperature);
     long getFlightAltitudeData();
     long getFlightStart(int flightNbr);
     long getFlightStop(int flightNbr);

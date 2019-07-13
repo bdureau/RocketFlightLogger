@@ -231,6 +231,11 @@ long currentMemaddress = 200;
 
 boolean telemetryEnable = false;
 
+//stop recording a maximum of 20 seconds after main has fired
+long recordingTimeOut = 20000;
+//long mainTime =0;
+long lastTelemetry =0;
+
 void assignPyroOutputs();
 void MainMenu();
 
@@ -619,7 +624,8 @@ void setEventState(int pyroOut, boolean state)
 }
 
 void SendTelemetry(long sampleTime) {
-  if (telemetryEnable) {
+  if (telemetryEnable && (millis() - lastTelemetry)> 500) {
+    lastTelemetry =millis();
     int val = 0;
     //check liftoff
     int li = 0;
@@ -935,6 +941,7 @@ void recordAltitude()
         {
           logger.setFlightTimeData( diffTime);
           logger.setFlightAltitudeData(currAltitude);
+          logger.setFlightTemperatureData((long) bmp.readTemperature());
           currentMemaddress = logger.writeFlight(currentMemaddress);
           currentMemaddress++;
         }
@@ -1031,7 +1038,7 @@ void recordAltitude()
             MainFiredComplete = true;
           }
         }
-        if (canRecord && MainFiredComplete && currAltitude < 10)
+        if ((canRecord && MainFiredComplete && currAltitude < 10) || (canRecord && MainFiredComplete && (millis()-mainStartTime)> recordingTimeOut))
         {
           //liftOff =false;
           //end loging
@@ -1399,7 +1406,8 @@ void checkBatVoltage(float minVolt) {
 #ifdef ALTIMULTISTM32
   pinMode(PB1, INPUT_ANALOG);
   int batVoltage = analogRead(PB1);
-  float bat = 3.05 * ((float)(batVoltage * 3300) / (float)4096000);
+  //float bat = 3.05 * ((float)(batVoltage * 3300) / (float)4096000);
+  float bat = 3.1972 * ((float)(batVoltage * 3300) / (float)4096000);
   //float bat =10*((float)(batVoltage*3300)/(float)4096000);
   SerialCom.println(bat);
   if (bat < minVolt) {

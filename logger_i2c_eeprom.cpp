@@ -170,6 +170,10 @@ void logger_I2C_eeprom::setFlightAltitudeData( long altitude)
 {
   _FlightData.altitude = altitude;
 }
+void logger_I2C_eeprom::setFlightTemperatureData( long temperature)
+{
+  _FlightData.temperature = temperature;
+}
 long logger_I2C_eeprom::getFlightStart(int flightNbr)
 {
   return  _FlightConfig[flightNbr].flight_start;
@@ -206,7 +210,7 @@ void logger_I2C_eeprom::PrintFlight(int flightNbr)
 
       currentTime = currentTime + getFlightTimeData();
 
-      SerialCom.println(String(currentTime) + "," + getFlightAltitudeData());
+      SerialCom.println(String(currentTime) + "," + getFlightAltitudeData()+"," +_FlightData.temperature);
 
     }
     SerialCom.println("EndFlight;" );
@@ -235,7 +239,8 @@ void logger_I2C_eeprom::printFlightData(int flightNbr)
 
       currentTime = currentTime + getFlightTimeData();
 
-      SerialCom.println("$" + String("data,") + String(flightNbr) + "," + String(currentTime) + "," + String(getFlightAltitudeData()) + ";");
+      SerialCom.println("$" + String("data,") + String(flightNbr) + "," + String(currentTime) + 
+      "," + String(getFlightAltitudeData()) + "," + String(_FlightData.temperature)+ ";");
 
     }
 
