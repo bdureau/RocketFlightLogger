@@ -155,7 +155,7 @@ const int pinAltitude2 = 7;
 //soft configuration
 boolean softConfigValid = false;
 
-//not that the STM32 board has 4 pyro output
+//note that the STM32 board has 4 pyro output
 #ifdef ALTIMULTISTM32
 //by default apogee pin
 const int pinChannel1Continuity = PA2;
@@ -265,6 +265,51 @@ double ReadAltitude()
   return A;
 }
 #endif
+
+void initAlti() {
+  out1Enable = true;
+  out2Enable = true;
+  out3Enable = true;
+  #ifdef NBR_PYRO_OUT4
+  out4Enable = true;
+  #endif
+// set main altitude (if in feet convert to metrics)
+  if (config.unit == 0)
+    FEET_IN_METER = 1;
+  else
+    FEET_IN_METER = 3.28084 ;
+
+  mainDeployAltitude = int(config.mainAltitude / FEET_IN_METER);
+  // beepFrequency
+  beepingFrequency = config.beepingFrequency;
+
+  assignPyroOutputs();
+
+  //number of measures to do to detect Apogee
+  measures = config.nbrOfMeasuresForApogee;
+
+  //check which pyro are enabled
+  pos = -1;
+
+  if (out1Enable) {
+    pos++;
+    continuityPins[pos] = pinChannel1Continuity;
+  }
+  if (out2Enable) {
+    pos++;
+    continuityPins[pos] = pinChannel2Continuity;
+  }
+  if (out3Enable) {
+    pos++;
+    continuityPins[pos] = pinChannel3Continuity;
+  }
+#ifdef NBR_PYRO_OUT4
+  if (out4Enable)  {
+    pos++;
+    continuityPins[pos] = pinChannel4Continuity;
+  }
+#endif
+}
 //================================================================
 // Start program
 //================================================================
@@ -291,15 +336,7 @@ void setup()
     writeConfigStruc();
   }
 
-  // set main altitude (if in feet convert to metrics)
-  if (config.unit == 0)
-    FEET_IN_METER = 1;
-  else
-    FEET_IN_METER = 3.28084 ;
-
-  mainDeployAltitude = int(config.mainAltitude / FEET_IN_METER);
-  // beepFrequency
-  beepingFrequency = config.beepingFrequency;
+  initAlti();
 
   // init Kalman filter
   KalmanInit();
@@ -336,7 +373,7 @@ void setup()
   mainHasFired = false;
 
   SerialCom.print(F("Start program\n"));
-  assignPyroOutputs();
+ // assignPyroOutputs();
 
   //SerialCom.print(F("Set outputs\n"));
   //Initialise the output pin
@@ -410,7 +447,7 @@ void setup()
   }
   
    //number of measures to do to detect Apogee
-    measures = config.nbrOfMeasuresForApogee;
+    //measures = config.nbrOfMeasuresForApogee;
 
   // let's do some dummy altitude reading
   // to initialise the Kalman filter
@@ -464,7 +501,7 @@ void setup()
   //SerialCom.println("Init complete");
 
   //check which pyro are enabled
-
+/*
   if (out1Enable) {
     pos++;
     continuityPins[pos] = pinChannel1Continuity;
@@ -482,7 +519,7 @@ void setup()
     pos++;
     continuityPins[pos] = pinChannel4Continuity;
   }
-#endif
+#endif*/
 
 }
 void assignPyroOutputs()
@@ -623,8 +660,8 @@ void setEventState(int pyroOut, boolean state)
 #endif
 }
 
-void SendTelemetry(long sampleTime) {
-  if (telemetryEnable && (millis() - lastTelemetry)> 500) {
+void SendTelemetry(long sampleTime, int freq) {
+  if (telemetryEnable && (millis() - lastTelemetry)> freq) {
     lastTelemetry =millis();
     int val = 0;
     //check liftoff
@@ -720,7 +757,8 @@ void SendTelemetry(long sampleTime) {
     pinMode(PB1, INPUT_ANALOG);
     int batVoltage = analogRead(PB1);
     //float bat =((batVoltage*3300)/4096)/100;
-    SerialCom.print(batVoltage);
+    float bat = VOLT_DIVIDER * ((float)(batVoltage * 3300) / (float)4096000);
+    SerialCom.print(bat);
 #else
   SerialCom.print(F(","));
   SerialCom.print(-1);
@@ -803,11 +841,11 @@ void recordAltitude()
     //read current altitude
     currAltitude = (ReadAltitude() - initialAltitude);
     if (liftOff)
-      SendTelemetry(millis() - initialTime);
+      SendTelemetry(millis() - initialTime, 200);
     if (( currAltitude > liftoffAltitude) == true && liftOff == false && mainHasFired == false)
     {
       liftOff = true;
-      SendTelemetry(0);
+      SendTelemetry(0, 200);
       // save the time
       initialTime = millis();
       if (config.superSonicYesNo == 1)
@@ -835,7 +873,7 @@ void recordAltitude()
         currAltitude = (ReadAltitude() - initialAltitude);
 
         currentTime = millis() - initialTime;
-        SendTelemetry(currentTime);
+        SendTelemetry(currentTime,200);
         diffTime = currentTime - prevTime;
         prevTime = currentTime;
         if (timerEvent1_enable && Event1Fired == false)
@@ -979,7 +1017,7 @@ void recordAltitude()
 #endif
             apogeeReadyToFire = false;
             apogeeHasFired = true;
-            SendTelemetry(millis() - initialTime);
+            SendTelemetry(millis() - initialTime, 200);
           }
         }
 
@@ -1020,7 +1058,7 @@ void recordAltitude()
             mainReadyToFire = false;
             //setEventState(pinMain, true);
             mainHasFired = true;
-            SendTelemetry(millis() - initialTime);
+            SendTelemetry(millis() - initialTime, 200);
           }
         }
 
@@ -1057,7 +1095,7 @@ void recordAltitude()
         if (MainFiredComplete && currAltitude < 10)
         {
           liftOff = false;
-          SendTelemetry(millis() - initialTime);
+          SendTelemetry(millis() - initialTime, 200);
         }
 #ifdef NBR_PYRO_OUT4
         if (Output1Fired == true && Output2Fired == true && Output3Fired == true && Output4Fired == true)
@@ -1069,7 +1107,7 @@ void recordAltitude()
           SerialCom.println(F("all event have fired"));
 #endif
           exit = true;
-          SendTelemetry(millis() - initialTime);
+          SendTelemetry(millis() - initialTime, 200);
         }
 
       }
@@ -1107,12 +1145,12 @@ void MainMenu()
     {
       currAltitude = (ReadAltitude() - initialAltitude);
       if (liftOff)
-        SendTelemetry(millis() - initialTime);
+        SendTelemetry(millis() - initialTime, 200);
       if (( currAltitude > liftoffAltitude) != true)
       {
         continuityCheckNew();
-        SendTelemetry(0);
-        checkBatVoltage(7.0);
+        SendTelemetry(0, 500);
+        checkBatVoltage(BAT_MIN_VOLTAGE);
       }
       else
       {
@@ -1276,12 +1314,14 @@ void interpretCommandBuffer(char *commandbuffer) {
   else if (commandbuffer[0] == 's')
   {
     writeAltiConfig(commandbuffer);
+    initAlti();
   }
   //reset alti config this is equal to t why do I have 2 !!!!
   else if (commandbuffer[0] == 'd')
   {
     defaultConfig();
     writeConfigStruc();
+    initAlti();
   }
   //FastReading
   else if (commandbuffer[0] == 'f')
@@ -1308,6 +1348,7 @@ void interpretCommandBuffer(char *commandbuffer) {
     //reset config
     defaultConfig();
     writeConfigStruc();
+    initAlti();
     SerialCom.print(F("config reseted\n"));
   }
   // unused
@@ -1407,7 +1448,7 @@ void checkBatVoltage(float minVolt) {
   pinMode(PB1, INPUT_ANALOG);
   int batVoltage = analogRead(PB1);
   //float bat = 3.05 * ((float)(batVoltage * 3300) / (float)4096000);
-  float bat = 3.1972 * ((float)(batVoltage * 3300) / (float)4096000);
+  float bat = VOLT_DIVIDER * ((float)(batVoltage * 3300) / (float)4096000);
   //float bat =10*((float)(batVoltage*3300)/(float)4096000);
   SerialCom.println(bat);
   if (bat < minVolt) {

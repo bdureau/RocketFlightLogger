@@ -38,6 +38,12 @@
 //#define SERIAL_DEBUG
 #undef SERIAL_DEBUG
 
+#define BAT_MIN_VOLTAGE 7.0
+//Voltage divider
+#define R1 4.7
+#define R2 10
+
+#define VOLT_DIVIDER 10*(R1/(R1+R2))
 
 ////////////// config changes end here /////////////
 //////////// do not change anything after unless you know what you are doing /////////////////////

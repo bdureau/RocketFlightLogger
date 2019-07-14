@@ -4,9 +4,14 @@
 #ifdef ALTIMULTISTM32
 const int pyroOut1 = PA1;//9;
 int pinApogee = PA1;//9;
-#else
+#endif
+#ifdef ALTIMULTIV2
 const int pyroOut1 =12;// 9;
 int pinApogee = 12; //9;
+#endif
+#ifdef ALTIMULTI
+const int pyroOut1 = 9;
+int pinApogee = 9;
 #endif
 //pyro out 2
 #ifdef ALTIMULTIV2
