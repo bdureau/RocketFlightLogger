@@ -74,6 +74,7 @@
   bug fixes
   added the ability to turn off telemetry
   added config checksum calculation
+  added software pull up so that it works with all bluetooth modules
 */
 
 //altimeter configuration lib
@@ -351,6 +352,15 @@ void setup()
   //SerialCom.begin(38400);
 
   //  pinMode(A0, INPUT);
+#ifdef ALTIMULTI 
+//software pull up so that all bluetooth modules work!!! took me a good day to figure it out
+pinMode(PD0, INPUT_PULLUP);
+#endif
+
+//software pull up so that all bluetooth modules work!!!
+#ifdef ALTIMULTIV2 
+pinMode(PD0, INPUT_PULLUP);
+#endif
 
 
   //Presure Sensor Initialisation
@@ -981,6 +991,7 @@ void recordAltitude()
           logger.setFlightAltitudeData(currAltitude);
           logger.setFlightTemperatureData((long) bmp.readTemperature());
           currentMemaddress = logger.writeFlight(currentMemaddress);
+          //currentMemaddress = logger.writeFastFlight(currentMemaddress);
           currentMemaddress++;
         }
         if (config.superSonicYesNo == 1)
@@ -1227,6 +1238,8 @@ void interpretCommandBuffer(char *commandbuffer) {
     //i2c_eeprom_erase_fileList();
     logger.clearFlightList();
     logger.writeFlightList();
+    currentFileNbr = 0;
+    currentMemaddress = 201;
   }
   //this will read one flight
   else if (commandbuffer[0] == 'r')

@@ -17,14 +17,14 @@
 // here choose one of the board that you want to use
 // note that you will need to compile using the Arduino Uno or SMT32 board
 // if you have the original ALTIMULTI board using an ATMega328 define ALTIMULTI
-//#define ALTIMULTI
+#define ALTIMULTI
 
 // if you have a modified ALTIMULTI board using an ATMega328 using different Arduino pins for the
 // pyro output so that they do not fire following a reset of the board then define ALTIMULTIV2
 //#define ALTIMULTIV2
 
 // if you have the STM32 shield then define ALTIMULTISTM32
-#define ALTIMULTISTM32
+//#define ALTIMULTISTM32
 
 // choose the pressure sensor that you are using
 // for most board the pressure sensor is either BMP085 or BMP180 

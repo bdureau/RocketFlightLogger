@@ -9,7 +9,7 @@ logger_I2C_eeprom::logger_I2C_eeprom(uint8_t deviceAddress)
 logger_I2C_eeprom::logger_I2C_eeprom(uint8_t deviceAddress, const unsigned int deviceSize)
 {
   _deviceAddress = deviceAddress;
-
+ _pageSize = 64;
   // Chips 16Kbit (2048 Bytes) or smaller only have one-word addresses.
   // Also try to guess page size from device size (going by Microchip 24LCXX datasheets here).
   /*if (deviceSize <= 256)
@@ -110,6 +110,66 @@ int logger_I2C_eeprom::writeFlight(int eeaddress)
   }
   return eeaddress + i;
 }
+
+int  logger_I2C_eeprom::writeFastFlight(uint16_t eeaddress) {
+  // Have to handle write page wrapping,
+  // 24lc512 has 128 byte
+  // 24lc64 has 32 byte
+
+  //const uint16_t len;
+  const uint8_t pageSize = _pageSize;
+  uint16_t bk = sizeof(_FlightData);
+  bool abort = false;
+  uint8_t i;
+  uint16_t j = 0;
+  uint32_t timeout;
+  uint16_t mask = pageSize - 1;
+  while ((bk > 0) && !abort) {
+    i = I2C_TWIBUFFERSIZE; // maximum data bytes that Wire.h can send in one transaction
+    if (i > bk) i = bk; // data block is bigger than Wire.h can handle in one transaction
+    if (((eeaddress) & ~mask) != ((((eeaddress) + i) - 1) & ~mask)) { // over page! block would wrap around page
+      i = (((eeaddress) | mask) - (eeaddress)) + 1; // shrink the block until it stops at the end of the current page
+
+    }
+    //wait for the EEPROM device to complete a prior write, or 10ms
+    timeout = millis();
+    bool ready = false;
+    while (!ready && (millis() - timeout < 10)) {
+      Wire.beginTransmission(_deviceAddress);
+      ready = (Wire.endTransmission(true) == 0); // wait for device to become ready!
+    }
+    if (!ready) { // chip either does not exist, is hung, or died
+      abort = true;
+
+      break;
+    }
+
+    // start sending this current block
+    Wire.beginTransmission(_deviceAddress);
+    Wire.write((uint8_t)highByte(eeaddress));
+    Wire.write((uint8_t)lowByte(eeaddress));
+
+    bk = bk - i;
+    eeaddress = (eeaddress) + i;
+
+    while (i > 0) {
+      Wire.write(*((char*)&_FlightData + (j++)));
+      i--;
+    }
+
+    uint8_t err = Wire.endTransmission();
+    //delay(10);
+    if(err!=0){
+ SerialCom.print(F("write Failure="));
+ SerialCom.println(err,DEC);
+ //abort = true;
+
+ }
+  }
+
+  return eeaddress;
+}
+
 int logger_I2C_eeprom::getLastFlightNbr()
 {
   int i;

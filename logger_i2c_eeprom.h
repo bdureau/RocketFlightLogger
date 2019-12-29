@@ -11,7 +11,9 @@
 #include "Wstring.h"
 #include "Wiring.h"
 #endif
-
+// TWI buffer needs max 2 bytes for eeprom address
+// 1 byte for eeprom register address is available in txbuffer
+#define I2C_TWIBUFFERSIZE  30
 /*struct FlightConfigStruct {
   long flight1_start;    
   long flight1_stop;       
@@ -96,11 +98,13 @@ public:
     void PrintFlight(int flightNbr);
     void printFlightData(int flightNbr);
     boolean CanRecord();
+    int writeFastFlight(uint16_t eeaddress);
     
 private:
     
     FlightConfigStruct _FlightConfig[25];
     FlightDataStruct _FlightData;
+    uint8_t _pageSize;
 };
 
 #endif
