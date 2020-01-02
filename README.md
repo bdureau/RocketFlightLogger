@@ -1,4 +1,4 @@
-# AltiMulti
+# Rocket Flight logger: AltiMulti, AltiMultiV2 or AltiMultiSTM32
 This project is part of a complete rocket flight computer. Depending on the board that you have it has 3 or 4 pyro outputs that can be used for the main, the appoge or just simple timers. It has an eeprom that can record up to 25 flights. Those flights can then be read on the PC, Mac or Linux using the Arduino IDE serial port monitor.
 I am also working on a Java interface and an Android application that can plot the flight and configure the altimeter.                  
 
@@ -47,5 +47,4 @@ The ATMega 328 version has 3 pyro output.
 As of version 1.16 you can use an STM32 board which has 4 pyro output and a lot of memory. Plan is to use the additionnal serial ports to have the ability to use GPS modules combined with telemetry.
 <img src="/pictures/AltiMultiSTM32.jpg" width="49%">
 
-# Todo
-Add the ability to view GPS data
+
