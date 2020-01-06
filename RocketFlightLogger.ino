@@ -75,6 +75,8 @@
   added the ability to turn off telemetry
   added config checksum calculation
   added software pull up so that it works with all bluetooth modules
+  Major changes on version 1.20
+  Changed the EEPROM logging so that it does it a lot faster
 */
 
 //altimeter configuration lib
@@ -510,26 +512,8 @@ pinMode(PD0, INPUT_PULLUP);
 
   //SerialCom.println("Init complete");
 
-  //check which pyro are enabled
-/*
-  if (out1Enable) {
-    pos++;
-    continuityPins[pos] = pinChannel1Continuity;
-  }
-  if (out2Enable) {
-    pos++;
-    continuityPins[pos] = pinChannel2Continuity;
-  }
-  if (out3Enable) {
-    pos++;
-    continuityPins[pos] = pinChannel3Continuity;
-  }
-#ifdef NBR_PYRO_OUT4
-  if (out4Enable)  {
-    pos++;
-    continuityPins[pos] = pinChannel4Continuity;
-  }
-#endif*/
+  
+
 
 }
 void assignPyroOutputs()
@@ -990,8 +974,8 @@ void recordAltitude()
           logger.setFlightTimeData( diffTime);
           logger.setFlightAltitudeData(currAltitude);
           logger.setFlightTemperatureData((long) bmp.readTemperature());
-          currentMemaddress = logger.writeFlight(currentMemaddress);
-          //currentMemaddress = logger.writeFastFlight(currentMemaddress);
+          //currentMemaddress = logger.writeFlight(currentMemaddress);
+          currentMemaddress = logger.writeFastFlight(currentMemaddress);
           currentMemaddress++;
         }
         if (config.superSonicYesNo == 1)

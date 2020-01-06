@@ -1,33 +1,20 @@
 #include "logger_i2c_eeprom.h"
-
+#include "IC2extEEPROM.h"
+extEEPROM eep(kbits_512, 1, 64); 
 logger_I2C_eeprom::logger_I2C_eeprom(uint8_t deviceAddress)
 {
-  _deviceAddress = deviceAddress;
-  logger_I2C_eeprom(deviceAddress, LOGGER_I2C_EEPROM_PAGESIZE);
+  //_deviceAddress = deviceAddress;
+  //logger_I2C_eeprom(deviceAddress, LOGGER_I2C_EEPROM_PAGESIZE);
 }
 
-logger_I2C_eeprom::logger_I2C_eeprom(uint8_t deviceAddress, const unsigned int deviceSize)
+/*logger_I2C_eeprom::logger_I2C_eeprom(uint8_t deviceAddress, const unsigned int deviceSize)
 {
   _deviceAddress = deviceAddress;
  _pageSize = 64;
   // Chips 16Kbit (2048 Bytes) or smaller only have one-word addresses.
   // Also try to guess page size from device size (going by Microchip 24LCXX datasheets here).
-  /*if (deviceSize <= 256)
-    {
-      this->_isAddressSizeTwoWords = false;
-      this->_pageSize = 8;
-    }
-    else if (deviceSize <= 256 * 8)
-    {
-      this->_isAddressSizeTwoWords = false;
-      this->_pageSize = 16;
-    }
-    else
-    {
-      this->_isAddressSizeTwoWords = true;
-      this->_pageSize = 32;
-    }*/
-}
+  
+}*/
 
 void logger_I2C_eeprom::begin()
 {
@@ -47,7 +34,7 @@ void logger_I2C_eeprom::clearFlightList()
 
 }
 
-void logger_I2C_eeprom::write_byte( unsigned int eeaddress, uint8_t data ) {
+/*void logger_I2C_eeprom::write_byte( unsigned int eeaddress, uint8_t data ) {
   int rdata = data;
   int writeDelay = 10;
   Wire.beginTransmission(_deviceAddress);
@@ -68,106 +55,37 @@ uint8_t logger_I2C_eeprom::read_byte(  unsigned int eeaddress ) {
   Wire.requestFrom((uint8_t)_deviceAddress, (uint8_t)1);
   if (Wire.available()) rdata = Wire.read();
   return rdata;
-}
+}*/
 
 int logger_I2C_eeprom::readFlightList() {
 
-  int i;
-  /*Serial.print("Size of struct:");
-    Serial.println(sizeof(_FlightConfig));
-    Serial.print("device adress:");
-    Serial.println(_deviceAddress);*/
+/*  int i;
+  
   for ( i = 0; i < sizeof(_FlightConfig); i++ ) {
     // Serial.println(read_byte( FLIGHT_LIST_START+i ));
     *((char*)&_FlightConfig + i) = read_byte( FLIGHT_LIST_START + i );
   }
-  return FLIGHT_LIST_START + i ;
+  return FLIGHT_LIST_START + i ;*/
+   eep.read(0, ((byte*)&_FlightConfig), sizeof(_FlightConfig));
+  return FLIGHT_LIST_START + sizeof(_FlightConfig) ;
 }
 
 int logger_I2C_eeprom::readFlight(int eeaddress) {
 
-  int i;
-  for ( i = 0; i < sizeof(_FlightData); i++ ) {
-    *((char*)&_FlightData + i) = read_byte( eeaddress + i );
-  }
-  return eeaddress + i;
+  
+  eep.read(eeaddress, ((byte*)&_FlightData), sizeof(_FlightData));
+  return eeaddress + sizeof(_FlightData);
 }
 
 int logger_I2C_eeprom::writeFlightList()
 {
-  int i;
-  for ( i = 0; i < sizeof(_FlightConfig); i++ ) {
-    write_byte( FLIGHT_LIST_START + i, *((char*)&_FlightConfig + i) );
-  }
-  return FLIGHT_LIST_START + i;
+  
+  eep.write(FLIGHT_LIST_START, ((byte*)&_FlightConfig), sizeof(_FlightConfig));
+  return FLIGHT_LIST_START + sizeof(_FlightConfig);
 }
-
-int logger_I2C_eeprom::writeFlight(int eeaddress)
-{
-  int i;
-  for ( i = 0; i < sizeof(_FlightData); i++ ) {
-    write_byte( eeaddress + i, *((char*)&_FlightData + i) );
-  }
-  return eeaddress + i;
-}
-
-int  logger_I2C_eeprom::writeFastFlight(uint16_t eeaddress) {
-  // Have to handle write page wrapping,
-  // 24lc512 has 128 byte
-  // 24lc64 has 32 byte
-
-  //const uint16_t len;
-  const uint8_t pageSize = _pageSize;
-  uint16_t bk = sizeof(_FlightData);
-  bool abort = false;
-  uint8_t i;
-  uint16_t j = 0;
-  uint32_t timeout;
-  uint16_t mask = pageSize - 1;
-  while ((bk > 0) && !abort) {
-    i = I2C_TWIBUFFERSIZE; // maximum data bytes that Wire.h can send in one transaction
-    if (i > bk) i = bk; // data block is bigger than Wire.h can handle in one transaction
-    if (((eeaddress) & ~mask) != ((((eeaddress) + i) - 1) & ~mask)) { // over page! block would wrap around page
-      i = (((eeaddress) | mask) - (eeaddress)) + 1; // shrink the block until it stops at the end of the current page
-
-    }
-    //wait for the EEPROM device to complete a prior write, or 10ms
-    timeout = millis();
-    bool ready = false;
-    while (!ready && (millis() - timeout < 10)) {
-      Wire.beginTransmission(_deviceAddress);
-      ready = (Wire.endTransmission(true) == 0); // wait for device to become ready!
-    }
-    if (!ready) { // chip either does not exist, is hung, or died
-      abort = true;
-
-      break;
-    }
-
-    // start sending this current block
-    Wire.beginTransmission(_deviceAddress);
-    Wire.write((uint8_t)highByte(eeaddress));
-    Wire.write((uint8_t)lowByte(eeaddress));
-
-    bk = bk - i;
-    eeaddress = (eeaddress) + i;
-
-    while (i > 0) {
-      Wire.write(*((char*)&_FlightData + (j++)));
-      i--;
-    }
-
-    uint8_t err = Wire.endTransmission();
-    //delay(10);
-    if(err!=0){
- SerialCom.print(F("write Failure="));
- SerialCom.println(err,DEC);
- //abort = true;
-
- }
-  }
-
-  return eeaddress;
+int logger_I2C_eeprom::writeFastFlight(int eeaddress){
+  eep.write(eeaddress, ((byte*)&_FlightData), sizeof(_FlightData));
+  return eeaddress + sizeof(_FlightData);
 }
 
 int logger_I2C_eeprom::getLastFlightNbr()
@@ -175,40 +93,34 @@ int logger_I2C_eeprom::getLastFlightNbr()
   int i;
   for (i = 0; i < 25; i++)
   {
-    // Serial.print("i:");
-    //Serial.println(i);
-    // Serial.println(_FlightConfig[i].flight_start);
     if (_FlightConfig[i].flight_start == 0)
     {
       break;
     }
   }
   i--;
-  //Serial.print("ret i:");
-  //Serial.println(i);
   return i;
 }
+
 
 int logger_I2C_eeprom::printFlightList()
 {
   //retrieve from the eeprom
   int v_ret =  readFlightList();
-  //Serial.println(v_ret);
+
   //Read the stucture
   int i;
   for (i = 0; i < 25; i++)
   {
     if (_FlightConfig[i].flight_start == 0)
       break;
-    SerialCom.print("Flight Nbr: ");
-    SerialCom.println(i);
-    SerialCom.print("Start: ");
-    SerialCom.println(_FlightConfig[i].flight_start);
-    SerialCom.print("End: ");
-    SerialCom.println(_FlightConfig[i].flight_stop);
-
+    Serial1.print("Flight Nbr: ");
+    Serial1.println(i);
+    Serial1.print("Start: ");
+    Serial1.println(_FlightConfig[i].flight_start);
+    Serial1.print("End: ");
+    Serial1.println(_FlightConfig[i].flight_stop);
   }
-
   return i;
 }
 

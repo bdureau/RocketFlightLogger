@@ -98,7 +98,7 @@ public:
     void PrintFlight(int flightNbr);
     void printFlightData(int flightNbr);
     boolean CanRecord();
-    int writeFastFlight(uint16_t eeaddress);
+    int writeFastFlight(int eeaddress);
     
 private:
     
