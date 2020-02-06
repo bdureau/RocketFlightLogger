@@ -1,6 +1,6 @@
 /*
-  Rocket Flight Logger ver 1.19
-  Copyright Boris du Reau 2012-2019
+  Rocket Flight Logger ver 1.20
+  Copyright Boris du Reau 2012-2020
 
   The following is a datalogger for logging rocket flight.
   So far it can log the rocket altitude during the flight.
@@ -76,7 +76,7 @@
   added config checksum calculation
   added software pull up so that it works with all bluetooth modules
   Major changes on version 1.20
-  Changed the EEPROM logging so that it does it a lot faster
+  Changed the EEPROM logging so that it does is a lot faster
 */
 
 //altimeter configuration lib
@@ -363,7 +363,10 @@ pinMode(PD0, INPUT_PULLUP);
 #ifdef ALTIMULTIV2 
 pinMode(PD0, INPUT_PULLUP);
 #endif
-
+//software pull up so that all bluetooth modules work!!!
+#ifdef ALTIMULTISTM32 
+pinMode(PB11, INPUT_PULLUP);
+#endif
 
   //Presure Sensor Initialisation
 #ifdef BMP085_180
@@ -1447,7 +1450,7 @@ void checkBatVoltage(float minVolt) {
   //float bat = 3.05 * ((float)(batVoltage * 3300) / (float)4096000);
   float bat = VOLT_DIVIDER * ((float)(batVoltage * 3300) / (float)4096000);
   //float bat =10*((float)(batVoltage*3300)/(float)4096000);
-  SerialCom.println(bat);
+  //SerialCom.println(bat);
   if (bat < minVolt) {
     for (int i = 0; i < 10; i++)
     {
