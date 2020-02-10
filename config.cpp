@@ -194,15 +194,16 @@ void writeAltiConfig( char *p ) {
     i++;
 
   }
-
+  // add checksum
   config.cksum = CheckSumConf(config);
 
-  /*for( i=0; i<sizeof(config); i++ ) {
-    EEPROM.write(CONFIG_START+i, *((char*)&config + i));
-  }*/
   writeConfigStruc();
 }
-//////////////////////////////////////////////////////////////////////////////////////
+/*
+ * 
+ * Write config structure to the EEPROM  
+ * 
+ */
 void writeConfigStruc()
 {
     int i;
@@ -214,7 +215,11 @@ void writeConfigStruc()
     SerialCom.print(F("EEPROM length: "));
     //Serial.print(EEPROM.length());
 }
-
+/*
+ * 
+ * Print altimeter config to the Serial line 
+ * 
+ */
 void printAltiConfig()
 {
 
@@ -334,7 +339,9 @@ long checkEEPromEndAdress(int eepromSize)
 	}*/
 	return eepromSize*128;
 }
-
+/*
+ * Calculate Checksum for the config
+ */
 unsigned int CheckSumConf( ConfigStruct cnf)
  {
      int i;

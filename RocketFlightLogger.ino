@@ -76,7 +76,8 @@
   added config checksum calculation
   added software pull up so that it works with all bluetooth modules
   Major changes on version 1.20
-  Changed the EEPROM logging so that it does is a lot faster
+  Changed the EEPROM logging so that it does it a lot faster
+  Lot's of tidy up
 */
 
 //altimeter configuration lib
@@ -229,7 +230,7 @@ boolean Output4Fired = false;
 // current file number that you are recording
 int currentFileNbr = 0;
 
-// EEPROM start adress for the flights. Anything before that is the flight index
+// EEPROM start address for the flights. Anything before that is the flight index
 long currentMemaddress = 200;
 
 boolean telemetryEnable = false;
@@ -237,12 +238,17 @@ boolean telemetryEnable = false;
 //stop recording a maximum of 20 seconds after main has fired
 long recordingTimeOut = 20000;
 //long mainTime =0;
-long lastTelemetry =0;
+long lastTelemetry = 0;
 
 void assignPyroOutputs();
 void MainMenu();
 
 #ifdef BMP085_180
+/*
+   ReadAltitude()
+   Read Altitude function for a BMP85 or 180 Bosch sensor
+
+*/
 double ReadAltitude()
 {
   return KalmanCalc(bmp.readAltitude());
@@ -252,10 +258,16 @@ double ReadAltitude()
 double ReadAltitude()
 {
   return KalmanCalc(bmp.readAltitude());
+  //return bmp.readAltitude();
 }
 #endif
 #ifdef BMP280
-// Only used by BMP280
+/*
+
+   Read Altitude function for a BMP280 Bosch sensor
+
+
+*/
 double ReadAltitude()
 {
   double T, P, A;
@@ -269,14 +281,19 @@ double ReadAltitude()
 }
 #endif
 
+/*
+
+   initAlti()
+
+*/
 void initAlti() {
   out1Enable = true;
   out2Enable = true;
   out3Enable = true;
-  #ifdef NBR_PYRO_OUT4
+#ifdef NBR_PYRO_OUT4
   out4Enable = true;
-  #endif
-// set main altitude (if in feet convert to metrics)
+#endif
+  // set main altitude (if in feet convert to metrics)
   if (config.unit == 0)
     FEET_IN_METER = 1;
   else
@@ -313,9 +330,12 @@ void initAlti() {
   }
 #endif
 }
-//================================================================
-// Start program
-//================================================================
+
+/*
+   setup()
+   Initialise altimeter
+
+*/
 void setup()
 {
   int val = 0;     // variable to store the read value
@@ -354,18 +374,18 @@ void setup()
   //SerialCom.begin(38400);
 
   //  pinMode(A0, INPUT);
-#ifdef ALTIMULTI 
-//software pull up so that all bluetooth modules work!!! took me a good day to figure it out
-pinMode(PD0, INPUT_PULLUP);
+#ifdef ALTIMULTI
+  //software pull up so that all bluetooth modules work!!! took me a good day to figure it out
+  pinMode(PD0, INPUT_PULLUP);
 #endif
 
-//software pull up so that all bluetooth modules work!!!
-#ifdef ALTIMULTIV2 
-pinMode(PD0, INPUT_PULLUP);
+  //software pull up so that all bluetooth modules work!!!
+#ifdef ALTIMULTIV2
+  pinMode(PD0, INPUT_PULLUP);
 #endif
-//software pull up so that all bluetooth modules work!!!
-#ifdef ALTIMULTISTM32 
-pinMode(PB11, INPUT_PULLUP);
+  //software pull up so that all bluetooth modules work!!!
+#ifdef ALTIMULTISTM32
+  pinMode(PB11, INPUT_PULLUP);
 #endif
 
   //Presure Sensor Initialisation
@@ -388,13 +408,12 @@ pinMode(PB11, INPUT_PULLUP);
   mainHasFired = false;
 
   SerialCom.print(F("Start program\n"));
- // assignPyroOutputs();
 
-  //SerialCom.print(F("Set outputs\n"));
   //Initialise the output pin
   pinMode(pyroOut1, OUTPUT);
   pinMode(pyroOut2, OUTPUT);
   pinMode(pyroOut3, OUTPUT);
+  //some Altimeter such as the STM32 have 4 pyro outputs
 #ifdef NBR_PYRO_OUT4
   pinMode(pyroOut4, OUTPUT);
 #endif
@@ -430,8 +449,6 @@ pinMode(PB11, INPUT_PULLUP);
   //For example version 1.2 would be one long beep and 2 short beep
   beepAltiVersion(MAJOR_VERSION, MINOR_VERSION);
 
-  
-
   if (!softConfigValid)
   {
     //initialise the deployement altitude for the main
@@ -439,7 +456,7 @@ pinMode(PB11, INPUT_PULLUP);
 
     // On the Alti duo when you close the jumper you set it to 1
     // val is the left jumper and val1 is the right jumper
-    //as of version 1.4 only use the jumper if no valid softconfiguration
+    // as of version 1.4 only use the jumper if no valid softconfiguration
 
     val = digitalRead(pinAltitude1);
     val1 = digitalRead(pinAltitude2);
@@ -460,9 +477,9 @@ pinMode(PB11, INPUT_PULLUP);
       mainDeployAltitude = 200;
     }
   }
-  
-   //number of measures to do to detect Apogee
-    //measures = config.nbrOfMeasuresForApogee;
+
+  //number of measures to do to detect Apogee
+  //measures = config.nbrOfMeasuresForApogee;
 
   // let's do some dummy altitude reading
   // to initialise the Kalman filter
@@ -500,25 +517,20 @@ pinMode(PB11, INPUT_PULLUP);
   {
     currentMemaddress = logger.getFlightStop(lastFlightNbr) + 1;
     currentFileNbr = lastFlightNbr + 1;
-    /*Serial.print("Mem address:");
-      Serial.println(currentMemaddress);
-      Serial.print("Current flight:");
-      Serial.println(currentFileNbr);*/
   }
 
   // check if eeprom is full
-  /*if(isEepromFull())
-    canRecord == false;*/
   canRecord = logger.CanRecord();
   if (!canRecord)
     SerialCom.println("Cannot record");
-
-  //SerialCom.println("Init complete");
-
-  
-
-
 }
+
+/*
+   assignPyroOutputs()
+   Assign the pyro outputs different fonctionalities such as
+   apogge, main, timer
+
+*/
 void assignPyroOutputs()
 {
   pinMain = -1;
@@ -621,6 +633,9 @@ void assignPyroOutputs()
 #endif
 }
 
+/*
+   Set the state of the output
+*/
 void setEventState(int pyroOut, boolean state)
 {
   if (pyroOut == pyroOut1)
@@ -656,10 +671,13 @@ void setEventState(int pyroOut, boolean state)
   }
 #endif
 }
+/*
+   Send telemety so that we can plot the flight
 
+*/
 void SendTelemetry(long sampleTime, int freq) {
-  if (telemetryEnable && (millis() - lastTelemetry)> freq) {
-    lastTelemetry =millis();
+  if (telemetryEnable && (millis() - lastTelemetry) > freq) {
+    lastTelemetry = millis();
     int val = 0;
     //check liftoff
     int li = 0;
@@ -746,25 +764,27 @@ void SendTelemetry(long sampleTime, int freq) {
       SerialCom.print(-1);
     }
 #else
-  SerialCom.print(F(","));
-  SerialCom.print(-1);
+    SerialCom.print(F(","));
+    SerialCom.print(-1);
 #endif
 #ifdef ALTIMULTISTM32
     SerialCom.print(F(","));
     pinMode(PB1, INPUT_ANALOG);
     int batVoltage = analogRead(PB1);
-    //float bat =((batVoltage*3300)/4096)/100;
     float bat = VOLT_DIVIDER * ((float)(batVoltage * 3300) / (float)4096000);
     SerialCom.print(bat);
 #else
-  SerialCom.print(F(","));
-  SerialCom.print(-1);
+    SerialCom.print(F(","));
+    SerialCom.print(-1);
 #endif
-// temperature
-SerialCom.print(F(","));
+    // temperature
+    SerialCom.print(F(","));
     float temperature;
     temperature = bmp.readTemperature();
     SerialCom.print((int)temperature );
+    SerialCom.print(F(",")); 
+    //SerialCom.print(logger.getLastFlightEndAddress()); 
+    SerialCom.print((int)(100*((float)logger.getLastFlightEndAddress()/endAddress))); 
     SerialCom.println(F(";"));
   }
 }
@@ -776,11 +796,11 @@ void loop()
   MainMenu();
 }
 
-int currentVelocity(int prevTime, int curTime, int prevAltitude, int curAltitude)
-{
+/*int currentVelocity(int prevTime, int curTime, int prevAltitude, int curAltitude)
+  {
   int curSpeed = int ((curAltitude - prevAltitude) / ( curTime - prevTime));
   return curSpeed;
-}
+  }*/
 
 //================================================================
 // Function:  recordAltitude()
@@ -788,7 +808,7 @@ int currentVelocity(int prevTime, int curTime, int prevAltitude, int curAltitude
 //================================================================
 void recordAltitude()
 {
-  boolean exit = false;
+  boolean exitRecording = false;
   boolean apogeeReadyToFire = false;
   boolean mainReadyToFire = false;
   unsigned long apogeeStartTime = 0;
@@ -832,14 +852,14 @@ void recordAltitude()
   SerialCom.println(mainDelay);
 #endif
 
-  while (exit == false)
+  while (!exitRecording)
   {
 
     //read current altitude
     currAltitude = (ReadAltitude() - initialAltitude);
-    if (liftOff)
-      SendTelemetry(millis() - initialTime, 200);
-    if (( currAltitude > liftoffAltitude) == true && liftOff == false && mainHasFired == false)
+    //if (liftOff)
+    //  SendTelemetry(millis() - initialTime, 200);
+    if (( currAltitude > liftoffAltitude) && !liftOff && !mainHasFired)
     {
       liftOff = true;
       SendTelemetry(0, 200);
@@ -847,9 +867,7 @@ void recordAltitude()
       initialTime = millis();
       if (config.superSonicYesNo == 1)
         ignoreAltiMeasure = true;
-    }
-    if (liftOff)
-    {
+
 #ifdef SERIAL_DEBUG
       SerialCom.println(F("we have lift off\n"));
 #endif
@@ -857,260 +875,272 @@ void recordAltitude()
       {
         //Save start address
         logger.setFlightStartAddress (currentFileNbr, currentMemaddress);
+#ifdef SERIAL_DEBUG
+        SerialCom.println(F("Save start address\n"));
+#endif
       }
-      unsigned long prevTime = 0;
-      // loop until we have reach an altitude of 3 meter
-      //while(currAltitude > 3 && MainFiredComplete==false && liftOff ==true;)
-      while (liftOff == true)
+
+    }
+    unsigned long prevTime = 0;
+    // loop until we have reach an altitude of 3 meter
+    while (liftOff)
+    {
+      unsigned long currentTime;
+      unsigned long diffTime;
+      
+      currAltitude = (ReadAltitude() - initialAltitude);
+     
+      currentTime = millis() - initialTime;
+      SendTelemetry(currentTime, 200);
+      diffTime = currentTime - prevTime;
+      prevTime = currentTime;
+      if (timerEvent1_enable && Event1Fired == false)
       {
-        unsigned long currentTime;
-        unsigned long diffTime;
-        unsigned long timerEvent1_startime;
-
-        currAltitude = (ReadAltitude() - initialAltitude);
-
-        currentTime = millis() - initialTime;
-        SendTelemetry(currentTime,200);
-        diffTime = currentTime - prevTime;
-        prevTime = currentTime;
-        if (timerEvent1_enable && Event1Fired == false)
+        if (currentTime >= config.outPut1Delay)
         {
-          if (currentTime >= config.outPut1Delay)
-          {
-            //fire output pyroOut1
-            digitalWrite(pyroOut1, HIGH);
-            timerEvent1_startime = currentTime;
-            Event1Fired = true;
+          //fire output pyroOut1
+          digitalWrite(pyroOut1, HIGH);
+          Event1Fired = true;
 #ifdef SERIAL_DEBUG
-            SerialCom.println(F("Fired 1st out"));
+          SerialCom.println(F("Fired 1st out"));
 #endif
-          }
         }
-        if (timerEvent1_enable && Event1Fired == true)
+      }
+      if (timerEvent1_enable && Event1Fired == true)
+      {
+        if ((currentTime - config.outPut1Delay) >= 1000 && Output1Fired == false)
         {
-          if ((currentTime - config.outPut1Delay) >= 1000 && Output1Fired == false)
-          {
-            //switch off output pyroOut1
-            digitalWrite(pyroOut1, LOW);
-            Output1Fired = true;
+          //switch off output pyroOut1
+          digitalWrite(pyroOut1, LOW);
+          Output1Fired = true;
 #ifdef SERIAL_DEBUG
-            SerialCom.println(F("Finished Firing 1st out"));
+          SerialCom.println(F("Finished Firing 1st out"));
 #endif
-          }
         }
-        if (timerEvent2_enable && Event2Fired == false)
+      }
+      if (timerEvent2_enable && Event2Fired == false)
+      {
+        if (currentTime >= config.outPut2Delay)
         {
-          if (currentTime >= config.outPut2Delay)
-          {
-            //fire output pyroOut2
-            digitalWrite(pyroOut2, HIGH);
-            Event2Fired = true;
+          //fire output pyroOut2
+          digitalWrite(pyroOut2, HIGH);
+          Event2Fired = true;
 #ifdef SERIAL_DEBUG
-            SerialCom.println(F("Fired 2nd out"));
+          SerialCom.println(F("Fired 2nd out"));
 #endif
-          }
         }
-        if (timerEvent2_enable && Event2Fired == true )
+      }
+      if (timerEvent2_enable && Event2Fired == true )
+      {
+        if ((currentTime - config.outPut2Delay) >= 1000 && Output2Fired == false)
         {
-          if ((currentTime - config.outPut2Delay) >= 1000 && Output2Fired == false)
-          {
-            //switch off output pyroOut2
-            digitalWrite(pyroOut2, LOW);
-            Output2Fired = true;
+          //switch off output pyroOut2
+          digitalWrite(pyroOut2, LOW);
+          Output2Fired = true;
 #ifdef SERIAL_DEBUG
-            SerialCom.println(F("Finished Firing 2nd out"));
+          SerialCom.println(F("Finished Firing 2nd out"));
 #endif
-          }
         }
-        if (timerEvent3_enable && Event3Fired == false)
+      }
+      if (timerEvent3_enable && Event3Fired == false)
+      {
+        if (currentTime >= config.outPut3Delay)
         {
-          if (currentTime >= config.outPut3Delay)
-          {
-            //fire output pyroOut3
-            digitalWrite(pyroOut3, HIGH);
-            Event3Fired = true;
+          //fire output pyroOut3
+          digitalWrite(pyroOut3, HIGH);
+          Event3Fired = true;
 #ifdef SERIAL_DEBUG
-            SerialCom.println(F("Fired 3rd out"));
+          SerialCom.println(F("Fired 3rd out"));
 #endif
-          }
         }
-        if (timerEvent3_enable && Event3Fired == true)
+      }
+      if (timerEvent3_enable && Event3Fired == true)
+      {
+        if ((currentTime - config.outPut3Delay) >= 1000 && Output3Fired == false)
         {
-          if ((currentTime - config.outPut3Delay) >= 1000 && Output3Fired == false)
-          {
-            //switch off output pyroOut3
-            digitalWrite(pyroOut3, LOW);
-            Output3Fired = true;
+          //switch off output pyroOut3
+          digitalWrite(pyroOut3, LOW);
+          Output3Fired = true;
 #ifdef SERIAL_DEBUG
-            SerialCom.println(F("Finished Firing 3rd out"));
+          SerialCom.println(F("Finished Firing 3rd out"));
 #endif
-          }
         }
+      }
 #ifdef NBR_PYRO_OUT4
-        if (timerEvent4_enable && Event4Fired == false)
+      if (timerEvent4_enable && Event4Fired == false)
+      {
+        if (currentTime >= config.outPut4Delay)
         {
-          if (currentTime >= config.outPut4Delay)
-          {
-            //fire output pyroOut4
-            digitalWrite(pyroOut4, HIGH);
-            Event4Fired = true;
+          //fire output pyroOut4
+          digitalWrite(pyroOut4, HIGH);
+          Event4Fired = true;
 #ifdef SERIAL_DEBUG
-            SerialCom.println(F("Fired 4th out"));
+          SerialCom.println(F("Fired 4th out"));
 #endif
-          }
         }
-        if (timerEvent4_enable && Event4Fired == true)
+      }
+      if (timerEvent4_enable && Event4Fired == true)
+      {
+        if ((currentTime - config.outPut4Delay) >= 1000 && Output4Fired == false)
         {
-          if ((currentTime - config.outPut4Delay) >= 1000 && Output4Fired == false)
-          {
-            //switch off output pyroOut4
-            digitalWrite(pyroOut4, LOW);
-            Output4Fired = true;
+          //switch off output pyroOut4
+          digitalWrite(pyroOut4, LOW);
+          Output4Fired = true;
 #ifdef SERIAL_DEBUG
-            SerialCom.println(F("Finished Firing 4th out"));
+          SerialCom.println(F("Finished Firing 4th out"));
 #endif
-          }
         }
+      }
 #endif
-        if (canRecord)
-        {
-          logger.setFlightTimeData( diffTime);
-          logger.setFlightAltitudeData(currAltitude);
-          logger.setFlightTemperatureData((long) bmp.readTemperature());
-          //currentMemaddress = logger.writeFlight(currentMemaddress);
+
+      if (canRecord)
+      {
+        logger.setFlightTimeData( diffTime);
+        logger.setFlightAltitudeData(currAltitude);
+        logger.setFlightTemperatureData((long) bmp.readTemperature());
+
+        if( (currentMemaddress + logger.getSizeOfFlightData())  > endAddress) {
+          //flight is full let save it
+          //save end address
+          logger.setFlightEndAddress (currentFileNbr, currentMemaddress - 1);
+          canRecord =false;
+        } else {
           currentMemaddress = logger.writeFastFlight(currentMemaddress);
           currentMemaddress++;
         }
-        if (config.superSonicYesNo == 1)
-        {
-          //are we still in superSonic mode?
-          if (currentTime > 3000)
-            ignoreAltiMeasure = false;
-        }
-        if (currAltitude < lastAltitude && apogeeHasFired == false && ignoreAltiMeasure == false)
-        {
-          measures = measures - 1;
-          if (measures == 0)
-          {
-            //fire drogue
-            apogeeReadyToFire = true;
-            apogeeStartTime = millis();
-            apogeeAltitude = currAltitude;
-          }
-        }
-        else
-        {
-          lastAltitude = currAltitude;
-          measures = config.nbrOfMeasuresForApogee;
-        }
-        if (apogeeReadyToFire)
-        {
-          if ((millis() - apogeeStartTime) >= apogeeDelay)
-          {
-            //fire drogue
-            digitalWrite(pinApogee, HIGH);
-            setEventState(pinApogee, true);
+        delay(50);
 #ifdef SERIAL_DEBUG
-            SerialCom.println(F("Apogee has fired"));
+        //SerialCom.println(F("record Flight"));
 #endif
-            apogeeReadyToFire = false;
-            apogeeHasFired = true;
-            SendTelemetry(millis() - initialTime, 200);
-          }
-        }
-
-        if ((currAltitude  < mainDeployAltitude) && apogeeHasFired == true && mainHasFired == false)
-        {
-          // Deploy main chute  X meters or feet  before landing...
-          digitalWrite(pinApogee, LOW);
-#ifdef SERIAL_DEBUG
-          SerialCom.println(F("Apogee firing complete"));
-#endif
-          mainReadyToFire = true;
-#ifdef SERIAL_DEBUG
-          SerialCom.println(F("preparing main"));
-#endif
-          mainStartTime = millis();
-          //digitalWrite(pinMain, HIGH);
-          //mainHasFired=true;
-          mainAltitude = currAltitude;
-#ifdef SERIAL_DEBUG
-          SerialCom.println(F("main altitude"));
-
-          SerialCom.println(mainAltitude);
-#endif
-        }
-        if (mainReadyToFire)
-        {
-          //Serial.println("conf delay main" + config.outPut1Delay );
-          //Serial.println("conf delay" + config.outPut2Delay );
-          SerialCom.println(mainStartTime);
-
-          if ((millis() - mainStartTime) >= mainDelay)
-          {
-            //fire main
-#ifdef SERIAL_DEBUG
-            SerialCom.println(F("firing main"));
-#endif
-            digitalWrite(pinMain, HIGH);
-            mainReadyToFire = false;
-            //setEventState(pinMain, true);
-            mainHasFired = true;
-            SendTelemetry(millis() - initialTime, 200);
-          }
-        }
-
-        if (mainHasFired)
-        {
-
-          if ((millis() - (mainStartTime + mainDelay)) >= 1000 && MainFiredComplete == false)
-          {
-            digitalWrite(pinMain, LOW);
-            setEventState(pinMain, true);
-            //liftOff =false;
-#ifdef SERIAL_DEBUG
-            SerialCom.println("Main fired");
-#endif
-            MainFiredComplete = true;
-          }
-        }
-        if ((canRecord && MainFiredComplete && currAltitude < 10) || (canRecord && MainFiredComplete && (millis()-mainStartTime)> recordingTimeOut))
-        {
-          //liftOff =false;
-          //end loging
-          //store start and end address
-
-          //save end address
-          logger.setFlightEndAddress (currentFileNbr, currentMemaddress - 1);
-#ifdef SERIAL_DEBUG
-          SerialCom.println(F("stop recording\n "));
-          SerialCom.println(currentMemaddress);
-#endif
-          //fileA[currentFileNbr].endaddress = currentMemaddress -1;
-          //saveFlightA(currentFileNbr, startMemaddress, currentMemaddress -1);
-          logger.writeFlightList();
-        }
-        if (MainFiredComplete && currAltitude < 10)
-        {
-          liftOff = false;
-          SendTelemetry(millis() - initialTime, 200);
-        }
-#ifdef NBR_PYRO_OUT4
-        if (Output1Fired == true && Output2Fired == true && Output3Fired == true && Output4Fired == true)
-#else
-        if (Output1Fired == true && Output2Fired == true && Output3Fired == true )
-#endif
-        {
-#ifdef SERIAL_DEBUG
-          SerialCom.println(F("all event have fired"));
-#endif
-          exit = true;
-          SendTelemetry(millis() - initialTime, 200);
-        }
-
       }
-    }
-  }
+      if (config.superSonicYesNo == 1)
+      {
+        //are we still in superSonic mode?
+        if (currentTime > 3000)
+          ignoreAltiMeasure = false;
+      }
+      if ((currAltitude < lastAltitude) && apogeeHasFired == false && ignoreAltiMeasure == false)
+      {
+        measures = measures - 1;
+        if (measures == 0)
+        {
+          //fire drogue
+          apogeeReadyToFire = true;
+          apogeeStartTime = millis();
+          apogeeAltitude = currAltitude;
+        }
+      }
+      else
+      {
+        lastAltitude = currAltitude;
+        measures = config.nbrOfMeasuresForApogee;
+      }
+      if (apogeeReadyToFire)
+      {
+        if ((millis() - apogeeStartTime) >= apogeeDelay)
+        {
+          //fire drogue
+          digitalWrite(pinApogee, HIGH);
+          setEventState(pinApogee, true);
+#ifdef SERIAL_DEBUG
+          SerialCom.println(F("Apogee has fired"));
+#endif
+          apogeeReadyToFire = false;
+          apogeeHasFired = true;
+          SendTelemetry(millis() - initialTime, 200);
+        }
+      }
+      
+      if ((currAltitude  < mainDeployAltitude) && apogeeHasFired == true && mainHasFired == false)
+      {
+        // Deploy main chute  X meters or feet  before landing...
+        digitalWrite(pinApogee, LOW);
+#ifdef SERIAL_DEBUG
+        SerialCom.println(F("Apogee firing complete"));
+#endif
+        mainReadyToFire = true;
+#ifdef SERIAL_DEBUG
+        SerialCom.println(F("preparing main"));
+#endif
+        mainStartTime = millis();
+        //digitalWrite(pinMain, HIGH);
+        //mainHasFired=true;
+        mainAltitude = currAltitude;
+#ifdef SERIAL_DEBUG
+        SerialCom.println(F("main altitude"));
+
+        SerialCom.println(mainAltitude);
+#endif
+      }
+      if (mainReadyToFire)
+      {
+        if ((millis() - mainStartTime) >= mainDelay)
+        {
+          //fire main
+#ifdef SERIAL_DEBUG
+          SerialCom.println(F("firing main"));
+#endif
+          digitalWrite(pinMain, HIGH);
+          mainReadyToFire = false;
+          //setEventState(pinMain, true);
+          mainHasFired = true;
+          SendTelemetry(millis() - initialTime, 200);
+        }
+      }
+
+      if (mainHasFired)
+      {
+
+        if ((millis() - (mainStartTime + mainDelay)) >= 1000 && MainFiredComplete == false)
+        {
+          digitalWrite(pinMain, LOW);
+          setEventState(pinMain, true);
+          //liftOff =false;
+#ifdef SERIAL_DEBUG
+          SerialCom.println("Main fired");
+#endif
+          MainFiredComplete = true;
+        }
+      }
+      if ((canRecord && MainFiredComplete && (currAltitude < 10)) || (canRecord && MainFiredComplete && (millis() - mainStartTime) > recordingTimeOut))
+      {
+        //liftOff =false;
+        //end loging
+        //store start and end address
+
+        //save end address
+        logger.setFlightEndAddress (currentFileNbr, currentMemaddress - 1);
+#ifdef SERIAL_DEBUG
+        SerialCom.println(F("stop recording\n "));
+        SerialCom.println(currentMemaddress);
+#endif
+        logger.writeFlightList();
+      }
+      if ((MainFiredComplete && (currAltitude < 10)) || (MainFiredComplete && (millis() - mainStartTime) > recordingTimeOut))
+      {
+#ifdef SERIAL_DEBUG
+        SerialCom.println(F("main fired complete"));
+#endif
+        liftOff = false;
+        SendTelemetry(millis() - initialTime, 200);
+        //exitRecording = true;
+        // we have landed telemetry is not required anymore
+        telemetryEnable = false;
+      }
+        #ifdef NBR_PYRO_OUT4
+            if (Output1Fired == true && Output2Fired == true && Output3Fired == true && Output4Fired == true)
+        #else
+            if (Output1Fired == true && Output2Fired == true && Output3Fired == true )
+        #endif
+            {
+        #ifdef SERIAL_DEBUG
+              SerialCom.println(F("all event have fired"));
+        #endif
+              exitRecording = true;
+              SendTelemetry(millis() - initialTime, 200);
+            }
+    } // end while (liftoff)
+  } //end while(recording)
 }
 
 
@@ -1144,7 +1174,7 @@ void MainMenu()
       currAltitude = (ReadAltitude() - initialAltitude);
       if (liftOff)
         SendTelemetry(millis() - initialTime, 200);
-      if (( currAltitude > liftoffAltitude) != true)
+      if (!( currAltitude > liftoffAltitude) )
       {
         continuityCheckNew();
         SendTelemetry(0, 500);
@@ -1157,7 +1187,6 @@ void MainMenu()
       long savedTime = millis();
       while (apogeeHasFired == true && mainHasFired == true)
       {
-
         // check if we have anything on the serial port
         if (SerialCom.available())
         {
@@ -1216,6 +1245,28 @@ void MainMenu()
 }
 
 
+/*
+
+   This interprets menu commands. This can be used in the commend line or
+   this is used by the Android console
+
+   Commands are as folow:
+   e  erase all saved flights
+   r  followed by a number which is the flight number.
+      This will retrieve all data for the specified flight
+   w  Start or stop recording
+   n  Return the number of recorded flights in the EEprom
+   l  list all flights
+   c  toggle continuity on and off
+   a  get all flight data
+   b  get altimeter config
+   s  write altimeter config
+   d  reset alti config
+   h  hello. Does not do much
+   k  folowed by a number turn on or off the selected output
+   y  followed by a number turn telemetry on/off. if number is 1 then
+      telemetry in on else turn it off
+*/
 void interpretCommandBuffer(char *commandbuffer) {
   SerialCom.println((char*)commandbuffer);
   //this will erase all flight
@@ -1265,7 +1316,6 @@ void interpretCommandBuffer(char *commandbuffer) {
     SerialCom.print(F("n;"));
     //Serial.println(getFlightList());
     logger.printFlightList();
-    //recordAltitude();
   }
   //list all flights
   else if (commandbuffer[0] == 'l')
@@ -1323,6 +1373,15 @@ void interpretCommandBuffer(char *commandbuffer) {
     writeConfigStruc();
     initAlti();
   }
+  //reset config and set it to default
+  else if (commandbuffer[0] == 't')
+  {
+    //reset config
+    defaultConfig();
+    writeConfigStruc();
+    initAlti();
+    SerialCom.print(F("config reseted\n"));
+  }
   //FastReading
   else if (commandbuffer[0] == 'f')
   {
@@ -1341,15 +1400,6 @@ void interpretCommandBuffer(char *commandbuffer) {
   {
     //FastReading = false;
     SerialCom.print(F("$OK;\n"));
-  }
-  //reset config and set it to default
-  else if (commandbuffer[0] == 't')
-  {
-    //reset config
-    defaultConfig();
-    writeConfigStruc();
-    initAlti();
-    SerialCom.print(F("config reseted\n"));
   }
   // unused
   else if (commandbuffer[0] == 'i')
@@ -1406,18 +1456,19 @@ void interpretCommandBuffer(char *commandbuffer) {
   {
     SerialCom.print(F("$K0;\n"));
   }
-
   else
   {
-    // Serial.println(F("Unknown command" ));
     SerialCom.print(F("$UNKNOWN;"));
     SerialCom.println(commandbuffer[0]);
-
   }
 }
+/*
 
+   re-nitialise all flight related global variables
+
+*/
 void resetFlight() {
-  // re-nitialise all flight related global variables
+
   apogeeHasFired = false;
   mainHasFired = false;
   liftOff = false;
@@ -1443,6 +1494,12 @@ void resetFlight() {
   canRecord = logger.CanRecord();
 }
 
+/*
+
+   Check if the battery voltage is OK.
+   If not warn the user so that the battery does not get
+   damaged by over discharging
+*/
 void checkBatVoltage(float minVolt) {
 #ifdef ALTIMULTISTM32
   pinMode(PB1, INPUT_ANALOG);
@@ -1463,6 +1520,10 @@ void checkBatVoltage(float minVolt) {
 #endif
 
 }
+/*
+   Turn on or off one altimeter output
+   This is used to test them
+*/
 void fireOutput(int pin, boolean fire) {
   if (fire)
     digitalWrite(pin, HIGH);

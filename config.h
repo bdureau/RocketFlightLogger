@@ -50,6 +50,7 @@
 
 #define MAJOR_VERSION 1
 #define MINOR_VERSION 20
+#define BUILD 1
 #define CONFIG_START 32
 
 #ifdef ALTIMULTISTM32
