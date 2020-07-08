@@ -68,10 +68,12 @@ void defaultConfig()
   config.altimeterResolution = 0; //0 to 4 ie: from low resolution to high
   config.eepromSize=512;
   config.noContinuity = 0;
-  #ifdef NBR_PYRO_OUT4
+  //#ifdef NBR_PYRO_OUT4
   config.outPut4=3;
   config.outPut4Delay=0;
-  #endif
+  //#endif
+  config.liftOffAltitude=10;
+  config.batteryType=0;
   config.cksum=CheckSumConf(config);   
   //config.cksum=0xBA; 
 }
@@ -181,7 +183,7 @@ void writeAltiConfig( char *p ) {
     case 19:
       config.noContinuity=atoi(str);
       break;
-    #ifdef NBR_PYRO_OUT4
+    //#ifdef NBR_PYRO_OUT4
     case 20:
       config.outPut4=atoi(str);
       break;  
@@ -189,20 +191,28 @@ void writeAltiConfig( char *p ) {
       config.outPut4Delay=atol(str);
     	//SerialCom.print(F("WTF "));
       break;
-    #endif
+    case 22:
+      config.liftOffAltitude=atoi(str);  
+      break;  
+    case 23:
+      config.batteryType=atoi(str); 
+      //SerialCom.print(F("WTF "));
+      break;  
+    //#endif
     }
     i++;
 
   }
-
+  // add checksum
   config.cksum = CheckSumConf(config);
 
-  /*for( i=0; i<sizeof(config); i++ ) {
-    EEPROM.write(CONFIG_START+i, *((char*)&config + i));
-  }*/
   writeConfigStruc();
 }
-//////////////////////////////////////////////////////////////////////////////////////
+/*
+ * 
+ * Write config structure to the EEPROM  
+ * 
+ */
 void writeConfigStruc()
 {
     int i;
@@ -214,7 +224,11 @@ void writeConfigStruc()
     SerialCom.print(F("EEPROM length: "));
     //Serial.print(EEPROM.length());
 }
-
+/*
+ * 
+ * Print altimeter config to the Serial line 
+ * 
+ */
 void printAltiConfig()
 {
 
@@ -281,15 +295,20 @@ void printAltiConfig()
   SerialCom.print(F(","));
   SerialCom.print(config.noContinuity);
   
-  #ifdef NBR_PYRO_OUT4
+ // #ifdef NBR_PYRO_OUT4
   SerialCom.print(F(","));
   //output4
   SerialCom.print(config.outPut4);
   SerialCom.print(F(","));
    //output4 delay
   SerialCom.print(config.outPut4Delay);
-  //SerialCom.print(F(","));
-  #endif
+  SerialCom.print(F(","));
+  //#endif
+    //Lift off altitude
+  SerialCom.print(config.liftOffAltitude);
+  SerialCom.print(F(","));
+  //Battery type
+  SerialCom.print(config.batteryType);
   SerialCom.print(F(";\n"));
 
 }
@@ -334,7 +353,9 @@ long checkEEPromEndAdress(int eepromSize)
 	}*/
 	return eepromSize*128;
 }
-
+/*
+ * Calculate Checksum for the config
+ */
 unsigned int CheckSumConf( ConfigStruct cnf)
  {
      int i;

@@ -495,7 +495,7 @@ void setup()
   }
   initialAltitude = (sum / 10.0);
   lastAltitude = 0;//initialAltitude;
-  liftoffAltitude = 20;
+  liftoffAltitude = config.liftOffAltitude;//20;
 
   int v_ret;
   v_ret = logger.readFlightList();
@@ -784,20 +784,8 @@ void SendTelemetry(long sampleTime, int freq) {
     SerialCom.print((int)temperature );
     SerialCom.print(F(",")); 
     //SerialCom.print(logger.getLastFlightEndAddress()); 
-    logger.readFlightList();
-    int lastFlightAdd = logger.getLastFlightEndAddress();
-    if (lastFlightAdd < 0)
-      lastFlightAdd=0;
-      
-    if((logger.getLastFlightNbr()+1) == 0)
-      SerialCom.print(0);
-    else  
-      SerialCom.print((int)(100*((float)lastFlightAdd/endAddress))); 
-      
-    SerialCom.print(F(",")); 
-    SerialCom.print(logger.getLastFlightNbr()+1);
+    SerialCom.print((int)(100*((float)logger.getLastFlightEndAddress()/endAddress))); 
     SerialCom.println(F(";"));
-  
   }
 }
 //================================================================
@@ -1288,7 +1276,6 @@ void interpretCommandBuffer(char *commandbuffer) {
     //i2c_eeprom_erase_fileList();
     logger.clearFlightList();
     logger.writeFlightList();
-    logger.readFlightList();
     currentFileNbr = 0;
     currentMemaddress = 201;
   }

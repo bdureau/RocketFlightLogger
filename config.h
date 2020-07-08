@@ -17,11 +17,11 @@
 // here choose one of the board that you want to use
 // note that you will need to compile using the Arduino Uno or SMT32 board
 // if you have the original ALTIMULTI board using an ATMega328 define ALTIMULTI
-//#define ALTIMULTI
+#define ALTIMULTI
 
 // if you have a modified ALTIMULTI board using an ATMega328 using different Arduino pins for the
 // pyro output so that they do not fire following a reset of the board then define ALTIMULTIV2
-#define ALTIMULTIV2
+//#define ALTIMULTIV2
 
 // if you have the STM32 shield then define ALTIMULTISTM32
 //#define ALTIMULTISTM32
@@ -135,10 +135,12 @@ struct ConfigStruct {
   int altimeterResolution; // BMP sensor resolution
   int eepromSize;
   int noContinuity;
-  #ifdef ALTIMULTISTM32
+  //#ifdef ALTIMULTISTM32
   int outPut4;
   int outPut4Delay;
-  #endif
+  //#endif
+  int liftOffAltitude; //Lift off Altitude in meters
+  int batteryType; // 0= Unknown, 1= "2S (7.4 Volts)", 2 = "9 Volts",3 = "3S (11.1 Volts)
   int cksum;  
 };
 extern ConfigStruct config;
