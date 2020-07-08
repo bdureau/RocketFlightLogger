@@ -108,7 +108,6 @@ long logger_I2C_eeprom::getLastFlightEndAddress()
     }
   }
   i--;
-  
   return _FlightConfig[i].flight_stop;
 }
 
