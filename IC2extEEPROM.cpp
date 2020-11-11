@@ -52,7 +52,7 @@
  * http://creativecommons.org/licenses/by-sa/4.0/                              *
  *-----------------------------------------------------------------------------*/
 
-#include "IC2extEEPROM.h""
+#include "IC2extEEPROM.h"
 #include <Wire.h>
 
 // Constructor.

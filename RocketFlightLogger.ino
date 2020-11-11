@@ -159,6 +159,9 @@ const int pinAltitude2 = 7;
 //soft configuration
 boolean softConfigValid = false;
 
+// main loop
+boolean mainLoopEnable =true;
+
 //note that the STM32 board has 4 pyro output
 #ifdef ALTIMULTISTM32
 //by default apogee pin
@@ -785,6 +788,8 @@ void SendTelemetry(long sampleTime, int freq) {
     SerialCom.print(F(",")); 
     //SerialCom.print(logger.getLastFlightEndAddress()); 
     SerialCom.print((int)(100*((float)logger.getLastFlightEndAddress()/endAddress))); 
+    SerialCom.print(F(",")); 
+    SerialCom.print(logger.getLastFlightNbr()+1);
     SerialCom.println(F(";"));
   }
 }
@@ -1185,7 +1190,7 @@ void MainMenu()
         recordAltitude();
       }
       long savedTime = millis();
-      while (apogeeHasFired == true && mainHasFired == true)
+      while (apogeeHasFired  && mainHasFired )
       {
         // check if we have anything on the serial port
         if (SerialCom.available())
@@ -1262,10 +1267,16 @@ void MainMenu()
    b  get altimeter config
    s  write altimeter config
    d  reset alti config
+   t  reset alti config (why?)
+   f  FastReading on
+   g  FastReading off
    h  hello. Does not do much
+   i  unused
    k  folowed by a number turn on or off the selected output
    y  followed by a number turn telemetry on/off. if number is 1 then
       telemetry in on else turn it off
+   m  followed by a number turn main loop on/off. if number is 1 then
+      main loop in on else turn it off
 */
 void interpretCommandBuffer(char *commandbuffer) {
   SerialCom.println((char*)commandbuffer);
@@ -1448,6 +1459,23 @@ void interpretCommandBuffer(char *commandbuffer) {
     else {
       SerialCom.print(F("Telemetry disabled\n"));
       telemetryEnable = false;
+    }
+    SerialCom.print(F("$OK;\n"));
+  }
+   //mainloop on/off
+  else if (commandbuffer[0] == 'm')
+  {
+    if (commandbuffer[1] == '1') {
+#ifdef SERIAL_DEBUG
+      SerialCom.print(F("main Loop enabled\n"));
+#endif
+      mainLoopEnable = true;
+    }
+    else {
+#ifdef SERIAL_DEBUG
+      SerialCom.print(F("main loop disabled\n"));
+#endif
+      mainLoopEnable = false;
     }
     SerialCom.print(F("$OK;\n"));
   }

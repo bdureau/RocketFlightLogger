@@ -99,6 +99,8 @@ public:
     void printFlightData(int flightNbr);
     boolean CanRecord();
     int writeFastFlight(int eeaddress);
+    long getSizeOfFlightData();
+    long getLastFlightEndAddress();
     
 private:
     

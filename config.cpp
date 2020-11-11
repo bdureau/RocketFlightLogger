@@ -68,14 +68,11 @@ void defaultConfig()
   config.altimeterResolution = 0; //0 to 4 ie: from low resolution to high
   config.eepromSize=512;
   config.noContinuity = 0;
-  //#ifdef NBR_PYRO_OUT4
   config.outPut4=3;
   config.outPut4Delay=0;
-  //#endif
   config.liftOffAltitude=10;
   config.batteryType=0;
   config.cksum=CheckSumConf(config);   
-  //config.cksum=0xBA; 
 }
 boolean readAltiConfig() {
 	//set the config to default values so that if any have not been configured we can use the default ones
@@ -86,7 +83,6 @@ boolean readAltiConfig() {
   }
 
   if ( config.cksum != CheckSumConf(config) ) {
-  //if ( config.cksum != 0xBA ) {
     return false;
   }
 
