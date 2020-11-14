@@ -1181,7 +1181,8 @@ void MainMenu()
         SendTelemetry(millis() - initialTime, 200);
       if (!( currAltitude > liftoffAltitude) )
       {
-        continuityCheckNew();
+        //continuityCheckNew();
+        continuityCheckAsync();
         SendTelemetry(0, 500);
         checkBatVoltage(BAT_MIN_VOLTAGE);
       }

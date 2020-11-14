@@ -93,7 +93,7 @@
 //used for writing in the microcontroler internal eeprom
 #include <EEPROM.h>
 
-#include "avdweb_VirtualDelay.h"
+//#include "avdweb_VirtualDelay.h"
 
 //pyro out 1
 extern const int pyroOut1;
