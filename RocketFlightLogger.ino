@@ -78,6 +78,8 @@
   Major changes on version 1.20
   Changed the EEPROM logging so that it does it a lot faster
   Lot's of tidy up
+  Major changes on version 1.21
+  added checksum
 */
 
 //altimeter configuration lib
@@ -160,7 +162,7 @@ const int pinAltitude2 = 7;
 boolean softConfigValid = false;
 
 // main loop
-boolean mainLoopEnable =true;
+boolean mainLoopEnable = true;
 
 //note that the STM32 board has 4 pyro output
 #ifdef ALTIMULTISTM32
@@ -679,6 +681,125 @@ void setEventState(int pyroOut, boolean state)
 
 */
 void SendTelemetry(long sampleTime, int freq) {
+  char altiTelem[200] = "";
+  char temp[10] = "";
+  if (telemetryEnable && (millis() - lastTelemetry) > freq) {
+    lastTelemetry = millis();
+    int val = 0;
+    //check liftoff
+    int li = 0;
+    if (liftOff)
+      li = 1;
+
+    //check apogee
+    int ap = 0;
+    if (apogeeHasFired)
+      ap = 1;
+
+    //check main
+    int ma = 0;
+    if (mainHasFired)
+      ma = 1;
+    int landed = 0;
+    if ( mainHasFired && currAltitude < 10)
+      landed = 1;
+
+    strcat(altiTelem, "telemetry," );
+    sprintf(temp, "%i,", currAltitude);
+    strcat(altiTelem, temp);
+    sprintf(temp, "%i,", li);
+    strcat(altiTelem, temp);
+    sprintf(temp, "%i,", ap);
+    strcat(altiTelem, temp);
+    sprintf(temp, "%i,", apogeeAltitude);
+    strcat(altiTelem, temp);
+    sprintf(temp, "%i,", ma);
+    strcat(altiTelem, temp);
+    sprintf(temp, "%i,", mainAltitude);
+    strcat(altiTelem, temp);
+    sprintf(temp, "%i,", landed);
+    strcat(altiTelem, temp);
+    sprintf(temp, "%i,", sampleTime);
+    strcat(altiTelem, temp);
+    if (out1Enable) {
+      //check continuity
+      val = digitalRead(pinChannel1Continuity);
+      if (val == 0)
+        strcat(altiTelem, "0,");
+      else
+        strcat(altiTelem, "1,");
+    }
+    else {
+      strcat(altiTelem, "-1,");
+    }
+    if (out2Enable) {
+      //check continuity
+      val = digitalRead(pinChannel2Continuity);
+      delay(20);
+      if (val == 0)
+        strcat(altiTelem, "0,");
+      else
+        strcat(altiTelem, "1,");
+    }
+    else {
+      strcat(altiTelem, "-1,");
+    }
+    if (out3Enable) {
+      //check continuity
+      val = digitalRead(pinChannel3Continuity);
+      if (val == 0)
+        strcat(altiTelem, "0,");
+      else
+        strcat(altiTelem, "1,");
+    }
+    else {
+      strcat(altiTelem, "-1,");
+    }
+#ifdef NBR_PYRO_OUT4
+    if (out4Enable) {
+      //check continuity
+      val = digitalRead(pinChannel4Continuity);
+      if (val == 0)
+        strcat(altiTelem, "0,");
+      else
+        strcat(altiTelem, "1,");
+    }
+    else {
+      strcat(altiTelem, "-1,");
+    }
+#else
+    strcat(altiTelem, "-1,");
+#endif
+#ifdef ALTIMULTISTM32
+    pinMode(PB1, INPUT_ANALOG);
+    int batVoltage = analogRead(PB1);
+    float bat = VOLT_DIVIDER * ((float)(batVoltage * 3300) / (float)4096000);
+    sprintf(temp, "%f,", bat);
+    strcat(altiTelem, temp);
+#else
+    strcat(altiTelem, "-1,");
+#endif
+    // temperature
+    float temperature;
+    temperature = bmp.readTemperature();
+    sprintf(temp, "%i,", (int)temperature );
+    strcat(altiTelem, temp);
+
+    sprintf(temp, "%i,", (int)(100 * ((float)logger.getLastFlightEndAddress() / endAddress)) );
+    strcat(altiTelem, temp);
+    sprintf(temp, "%i,", logger.getLastFlightNbr() + 1 );
+    strcat(altiTelem, temp);
+
+    unsigned int chk;
+    chk = msgChk(altiTelem, sizeof(altiTelem));
+    sprintf(temp, "%i", chk);
+    strcat(altiTelem, temp);
+    strcat(altiTelem, ";\n");
+    SerialCom.print("$");
+    SerialCom.print(altiTelem);
+  }
+}
+/*void SendTelemetry(long sampleTime, int freq) {
   if (telemetryEnable && (millis() - lastTelemetry) > freq) {
     lastTelemetry = millis();
     int val = 0;
@@ -752,7 +873,7 @@ void SendTelemetry(long sampleTime, int freq) {
     else {
       SerialCom.print(-1);
     }
-#ifdef NBR_PYRO_OUT4
+  #ifdef NBR_PYRO_OUT4
     SerialCom.print(F(","));
     if (out4Enable) {
       //check continuity
@@ -766,33 +887,33 @@ void SendTelemetry(long sampleTime, int freq) {
     else {
       SerialCom.print(-1);
     }
-#else
+  #else
     SerialCom.print(F(","));
     SerialCom.print(-1);
-#endif
-#ifdef ALTIMULTISTM32
+  #endif
+  #ifdef ALTIMULTISTM32
     SerialCom.print(F(","));
     pinMode(PB1, INPUT_ANALOG);
     int batVoltage = analogRead(PB1);
     float bat = VOLT_DIVIDER * ((float)(batVoltage * 3300) / (float)4096000);
     SerialCom.print(bat);
-#else
+  #else
     SerialCom.print(F(","));
     SerialCom.print(-1);
-#endif
+  #endif
     // temperature
     SerialCom.print(F(","));
     float temperature;
     temperature = bmp.readTemperature();
     SerialCom.print((int)temperature );
-    SerialCom.print(F(",")); 
-    //SerialCom.print(logger.getLastFlightEndAddress()); 
-    SerialCom.print((int)(100*((float)logger.getLastFlightEndAddress()/endAddress))); 
-    SerialCom.print(F(",")); 
+    SerialCom.print(F(","));
+    //SerialCom.print(logger.getLastFlightEndAddress());
+    SerialCom.print((int)(100*((float)logger.getLastFlightEndAddress()/endAddress)));
+    SerialCom.print(F(","));
     SerialCom.print(logger.getLastFlightNbr()+1);
     SerialCom.println(F(";"));
   }
-}
+  }*/
 //================================================================
 // Main loop which call the menu
 //================================================================
@@ -892,9 +1013,9 @@ void recordAltitude()
     {
       unsigned long currentTime;
       unsigned long diffTime;
-      
+
       currAltitude = (ReadAltitude() - initialAltitude);
-     
+
       currentTime = millis() - initialTime;
       SendTelemetry(currentTime, 200);
       diffTime = currentTime - prevTime;
@@ -1004,11 +1125,11 @@ void recordAltitude()
         logger.setFlightAltitudeData(currAltitude);
         logger.setFlightTemperatureData((long) bmp.readTemperature());
 
-        if( (currentMemaddress + logger.getSizeOfFlightData())  > endAddress) {
+        if ( (currentMemaddress + logger.getSizeOfFlightData())  > endAddress) {
           //flight is full let save it
           //save end address
           logger.setFlightEndAddress (currentFileNbr, currentMemaddress - 1);
-          canRecord =false;
+          canRecord = false;
         } else {
           currentMemaddress = logger.writeFastFlight(currentMemaddress);
           currentMemaddress++;
@@ -1055,7 +1176,7 @@ void recordAltitude()
           SendTelemetry(millis() - initialTime, 200);
         }
       }
-      
+
       if ((currAltitude  < mainDeployAltitude) && apogeeHasFired == true && mainHasFired == false)
       {
         // Deploy main chute  X meters or feet  before landing...
@@ -1132,18 +1253,18 @@ void recordAltitude()
         // we have landed telemetry is not required anymore
         telemetryEnable = false;
       }
-        #ifdef NBR_PYRO_OUT4
-            if (Output1Fired == true && Output2Fired == true && Output3Fired == true && Output4Fired == true)
-        #else
-            if (Output1Fired == true && Output2Fired == true && Output3Fired == true )
-        #endif
-            {
-        #ifdef SERIAL_DEBUG
-              SerialCom.println(F("all event have fired"));
-        #endif
-              exitRecording = true;
-              SendTelemetry(millis() - initialTime, 200);
-            }
+#ifdef NBR_PYRO_OUT4
+      if (Output1Fired == true && Output2Fired == true && Output3Fired == true && Output4Fired == true)
+#else
+      if (Output1Fired == true && Output2Fired == true && Output3Fired == true )
+#endif
+      {
+#ifdef SERIAL_DEBUG
+        SerialCom.println(F("all event have fired"));
+#endif
+        exitRecording = true;
+        SendTelemetry(millis() - initialTime, 200);
+      }
     } // end while (liftoff)
   } //end while(recording)
 }
@@ -1310,7 +1431,10 @@ void interpretCommandBuffer(char *commandbuffer) {
     if (atol(temp) > -1)
     {
       //printFlight(atol(temp));
-      logger.PrintFlight(atoi(temp));
+      SerialCom.println("StartFlight;" );
+      //logger.PrintFlight(atoi(temp));
+      logger.printFlightData(atoi(temp));
+      SerialCom.println("EndFlight;" );
     }
     else
       SerialCom.println(F("not a valid flight"));
@@ -1463,7 +1587,7 @@ void interpretCommandBuffer(char *commandbuffer) {
     }
     SerialCom.print(F("$OK;\n"));
   }
-   //mainloop on/off
+  //mainloop on/off
   else if (commandbuffer[0] == 'm')
   {
     if (commandbuffer[1] == '1') {

@@ -95,7 +95,7 @@ public:
     long getFlightAltitudeData();
     long getFlightStart(int flightNbr);
     long getFlightStop(int flightNbr);
-    void PrintFlight(int flightNbr);
+    //void PrintFlight(int flightNbr);
     void printFlightData(int flightNbr);
     boolean CanRecord();
     int writeFastFlight(int eeaddress);

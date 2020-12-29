@@ -230,8 +230,8 @@ void continuityCheckAsync()
       }
       else {
         if ((millis() - startTempo   ) > tempo && tempo > 0) {
-          Serial1.print("End tempo:");
-          Serial1.println((millis() - startTempo ));
+          //Serial1.print("End tempo:");
+          //Serial1.println((millis() - startTempo ));
 
           noTone(pinSpeaker);
           tempo = 0;

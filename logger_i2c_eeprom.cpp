@@ -1,6 +1,6 @@
 #include "logger_i2c_eeprom.h"
 #include "IC2extEEPROM.h"
-extEEPROM eep(kbits_512, 1, 64); 
+extEEPROM eep(kbits_512, 1, 64);
 logger_I2C_eeprom::logger_I2C_eeprom(uint8_t deviceAddress)
 {
   //_deviceAddress = deviceAddress;
@@ -13,12 +13,12 @@ void logger_I2C_eeprom::begin()
   //initialize Flight structure
 
 }
-/* 
- * clearFlightList()
- * Clear the flight list. Rather than clearing the entire eeprom 
- * let's just reset addresses 0 to 200 which contains the flights addresses
- * 
- */
+/*
+   clearFlightList()
+   Clear the flight list. Rather than clearing the entire eeprom
+   let's just reset addresses 0 to 200 which contains the flights addresses
+
+*/
 void logger_I2C_eeprom::clearFlightList()
 {
   int i;
@@ -31,38 +31,38 @@ void logger_I2C_eeprom::clearFlightList()
 
 
 /*
- * readFlightList()
- * 
- */
-int logger_I2C_eeprom::readFlightList() 
+   readFlightList()
+
+*/
+int logger_I2C_eeprom::readFlightList()
 {
   eep.read(0, ((byte*)&_FlightConfig), sizeof(_FlightConfig));
   return FLIGHT_LIST_START + sizeof(_FlightConfig) ;
 }
 /*
- * readFlight(int eeaddress)
- * 
- */
-int logger_I2C_eeprom::readFlight(int eeaddress) 
+   readFlight(int eeaddress)
+
+*/
+int logger_I2C_eeprom::readFlight(int eeaddress)
 {
   eep.read(eeaddress, ((byte*)&_FlightData), sizeof(_FlightData));
   return eeaddress + sizeof(_FlightData);
 }
 
 /*
- * writeFlightList()
- * 
- */
+   writeFlightList()
+
+*/
 int logger_I2C_eeprom::writeFlightList()
-{ 
+{
   eep.write(FLIGHT_LIST_START, ((byte*)&_FlightConfig), sizeof(_FlightConfig));
   return FLIGHT_LIST_START + sizeof(_FlightConfig);
 }
 
 /*
- * writeFastFlight(int eeaddress)
- * 
- */
+   writeFastFlight(int eeaddress)
+
+*/
 int logger_I2C_eeprom::writeFastFlight(int eeaddress)
 {
   eep.write(eeaddress, ((byte*)&_FlightData), sizeof(_FlightData));
@@ -70,12 +70,12 @@ int logger_I2C_eeprom::writeFastFlight(int eeaddress)
 }
 
 /*
- * 
- * getLastFlightNbr()
- * Parse the flight index end check if the flight_start address is > 0
- * return -1 if no flight have been recorded else return the flight number
- * 
- */
+
+   getLastFlightNbr()
+   Parse the flight index end check if the flight_start address is > 0
+   return -1 if no flight have been recorded else return the flight number
+
+*/
 int logger_I2C_eeprom::getLastFlightNbr()
 {
   int i;
@@ -91,12 +91,12 @@ int logger_I2C_eeprom::getLastFlightNbr()
 }
 
 /*
- * 
- * getLastFlightNbr()
- * Parse the flight index end check if the flight_start address is > 0
- * return -1 if no flight have been recorded else return the flight number
- * 
- */
+
+   getLastFlightNbr()
+   Parse the flight index end check if the flight_start address is > 0
+   return -1 if no flight have been recorded else return the flight number
+
+*/
 long logger_I2C_eeprom::getLastFlightEndAddress()
 {
   int i;
@@ -112,11 +112,11 @@ long logger_I2C_eeprom::getLastFlightEndAddress()
 }
 
 /*
- * 
- * printFlightList()
- * 
- * 
- */
+
+   printFlightList()
+
+
+*/
 int logger_I2C_eeprom::printFlightList()
 {
   //retrieve from the eeprom
@@ -182,11 +182,11 @@ long logger_I2C_eeprom::getSizeOfFlightData()
   return sizeof(_FlightData);
 }
 /*
- * PrintFlight(int flightNbr)
- * 
- */
-void logger_I2C_eeprom::PrintFlight(int flightNbr)
-{
+   PrintFlight(int flightNbr)
+
+*/
+/*void logger_I2C_eeprom::PrintFlight(int flightNbr)
+  {
 
   long startaddress;
   long endaddress;
@@ -211,12 +211,47 @@ void logger_I2C_eeprom::PrintFlight(int flightNbr)
   }
   else
     SerialCom.println(F("No such flight\n"));
-}
+  }*/
 
 /*
- * printFlightData(int flightNbr)
- * 
- */
+   printFlightData(int flightNbr)
+
+*/
+/*
+  void logger_I2C_eeprom::printFlightData(int flightNbr)
+  {
+  int startaddress;
+  int endaddress;
+
+  startaddress = getFlightStart(flightNbr);
+  endaddress = getFlightStop(flightNbr);
+
+  if (startaddress > 200)
+  {
+   int i = startaddress;
+   unsigned long currentTime = 0;
+
+   while (i < (endaddress + 1))
+   {
+     i = readFlight(i) + 1;
+
+     currentTime = currentTime + getFlightTimeData();
+
+     //SerialCom.println("$" + String("data,") + String(flightNbr) + "," + String(currentTime) +
+    // "," + String(getFlightAltitudeData()) + "," + String(_FlightData.temperature)+ ";");
+  SerialCom.print("$data,");
+  SerialCom.print(flightNbr);
+  SerialCom.print(",");
+  SerialCom.print(currentTime);
+  SerialCom.print(",");
+  SerialCom.print(getFlightAltitudeData());
+  SerialCom.print(",");
+  SerialCom.print(_FlightData.temperature);
+  SerialCom.print(";\n");
+   }
+
+  }
+  }*/
 void logger_I2C_eeprom::printFlightData(int flightNbr)
 {
   int startaddress;
@@ -233,22 +268,43 @@ void logger_I2C_eeprom::printFlightData(int flightNbr)
     while (i < (endaddress + 1))
     {
       i = readFlight(i) + 1;
-
+      char flightData[150] = "";
+      char temp[9] = "";
       currentTime = currentTime + getFlightTimeData();
-
-      SerialCom.println("$" + String("data,") + String(flightNbr) + "," + String(currentTime) + 
-      "," + String(getFlightAltitudeData()) + "," + String(_FlightData.temperature)+ ";");
-
+      //SerialCom.print("$data,");
+      strcat(flightData, "data,");
+      //SerialCom.print(flightNbr);
+      //SerialCom.print(",");
+      sprintf(temp, "%i,", flightNbr );
+      strcat(flightData, temp);
+      //SerialCom.print(currentTime);
+      //SerialCom.print(",");
+      sprintf(temp, "%i,", currentTime );
+      strcat(flightData, temp);
+      //SerialCom.print(getFlightAltitudeData());
+      //SerialCom.print(",");
+      sprintf(temp, "%i,", getFlightAltitudeData() );
+      strcat(flightData, temp);
+      //SerialCom.print(_FlightData.temperature);
+      //SerialCom.print(";\n");
+      sprintf(temp, "%i,", _FlightData.temperature );
+      strcat(flightData, temp);
+      unsigned int chk = msgChk(flightData, sizeof(flightData));
+      sprintf(temp, "%i", chk);
+      strcat(flightData, temp);
+      strcat(flightData, ";\n");
+      SerialCom.print("$");
+      SerialCom.print(flightData);
     }
 
   }
 }
 /*
- * CanRecord()
- * First count the number of flights. It cannot be greter than 25
- * if last flight end address is greater than the max possible 
- * address then the EEprom is full
- */
+   CanRecord()
+   First count the number of flights. It cannot be greter than 25
+   if last flight end address is greater than the max possible
+   address then the EEprom is full
+*/
 boolean logger_I2C_eeprom::CanRecord()
 {
   long lastFlight;

@@ -21,10 +21,10 @@
 
 // if you have a modified ALTIMULTI board using an ATMega328 using different Arduino pins for the
 // pyro output so that they do not fire following a reset of the board then define ALTIMULTIV2
-//#define ALTIMULTIV2
+#define ALTIMULTIV2
 
 // if you have the STM32 shield then define ALTIMULTISTM32
-#define ALTIMULTISTM32
+//#define ALTIMULTISTM32
 
 // choose the pressure sensor that you are using
 // for most board the pressure sensor is either BMP085 or BMP180 
@@ -49,7 +49,7 @@
 //////////// do not change anything after unless you know what you are doing /////////////////////
 
 #define MAJOR_VERSION 1
-#define MINOR_VERSION 20
+#define MINOR_VERSION 21
 #define BUILD 1
 #define CONFIG_START 32
 
@@ -146,11 +146,12 @@ struct ConfigStruct {
 extern ConfigStruct config;
 
 extern void defaultConfig();
-extern boolean readAltiConfig();
+extern bool readAltiConfig();
 extern int getOutPin(int );
-extern void writeAltiConfig( char * );
+extern bool writeAltiConfig( char * );
 extern void printAltiConfig();
 extern void writeConfigStruc();
 extern bool CheckValideBaudRate(long);
 extern unsigned int CheckSumConf( ConfigStruct );
+extern unsigned int msgChk( char * buffer, long length );
 #endif
