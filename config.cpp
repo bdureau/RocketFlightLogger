@@ -304,8 +304,9 @@ void printAltiConfig()
   //AltimeterName
   //SerialCom.print(F(BOARD_FIRMWARE));
   //SerialCom.print(F(","));
-  sprintf(temp, "%s,", BOARD_FIRMWARE);
-  strcat(altiConfig, temp);
+  //sprintf(temp, "%s,", BOARD_FIRMWARE);
+  strcat(altiConfig, BOARD_FIRMWARE);
+   strcat(altiConfig,",");
   //alti major version
   // SerialCom.print(MAJOR_VERSION);
   sprintf(temp, "%i,", MAJOR_VERSION);
@@ -354,7 +355,7 @@ void printAltiConfig()
   strcat(altiConfig, temp);
   //SerialCom.print(config.connectionSpeed);
   //SerialCom.print(F(","));
-  sprintf(temp, "%i,", config.connectionSpeed);
+  sprintf(temp, "%lu,", config.connectionSpeed);
   strcat(altiConfig, temp);
   //SerialCom.print(config.altimeterResolution);
   //SerialCom.print(F(","));
