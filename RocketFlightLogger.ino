@@ -681,7 +681,7 @@ void setEventState(int pyroOut, boolean state)
 
 */
 void SendTelemetry(long sampleTime, int freq) {
-  char altiTelem[200] = "";
+  char altiTelem[150] = "";
   char temp[10] = "";
   if (telemetryEnable && (millis() - lastTelemetry) > freq) {
     lastTelemetry = millis();
@@ -1282,7 +1282,7 @@ void MainMenu()
 
   char commandbuffer[200];
 
-  SerialCom.println(F("Rocket flight data logger. A maximum of 25 flight can be logged \n"));
+ /* SerialCom.println(F("Rocket flight data logger. A maximum of 25 flight can be logged \n"));
   SerialCom.println(F("Commands are: \n"));
   SerialCom.println(F("w = record flight \n"));
   SerialCom.println(F("r (followed by the flight number) = read flight data\n"));
@@ -1290,7 +1290,7 @@ void MainMenu()
   SerialCom.println(F("e  = erase all flight data \n"));
   SerialCom.println(F("c  = toggle continuity on/off \n"));
   SerialCom.println(F("b  = print alti config \n"));
-  SerialCom.println(F("Enter Command and terminate it by a ; >>\n"));
+  SerialCom.println(F("Enter Command and terminate it by a ; >>\n"));*/
   i = 0;
   readVal = ' ';
   while ( readVal != ';')
@@ -1499,8 +1499,16 @@ void interpretCommandBuffer(char *commandbuffer) {
   //write altimeter config
   else if (commandbuffer[0] == 's')
   {
-    writeAltiConfig(commandbuffer);
-    initAlti();
+    if(writeAltiConfig(commandbuffer)) {
+      
+       SerialCom.print(F("$OK;\n"));
+        initAlti();
+    }
+    else {
+      SerialCom.print(F("$KO;\n"));
+    }
+    
+   
   }
   //reset alti config this is equal to t why do I have 2 !!!!
   else if (commandbuffer[0] == 'd')

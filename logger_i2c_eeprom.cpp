@@ -268,7 +268,7 @@ void logger_I2C_eeprom::printFlightData(int flightNbr)
     while (i < (endaddress + 1))
     {
       i = readFlight(i) + 1;
-      char flightData[150] = "";
+      char flightData[120] = "";
       char temp[9] = "";
       currentTime = currentTime + getFlightTimeData();
       //SerialCom.print("$data,");

@@ -155,6 +155,7 @@ bool writeAltiConfig( char *p ) {
         break;
       case 8:
         config.outPut1Delay = atol(str);
+        strcat(msg, str);
         break;
       case 9:
         config.outPut2Delay = atol(str);
@@ -215,6 +216,7 @@ bool writeAltiConfig( char *p ) {
       case 23:
         config.batteryType = atoi(str);
         strcat(msg, str);
+        //strcat(msg, "\0");
         break;
       case 24:
         //our checksum
@@ -227,8 +229,14 @@ bool writeAltiConfig( char *p ) {
   //we have a partial config
   if (i<23)
     return false;
+    //SerialCom.println("I am about to save");
+   // SerialCom.println(msg);
+   // SerialCom.println(strChk);
+    // SerialCom.println(msgChk(msg, strlen(msg)));
+    // SerialCom.println(strlen(msg));
   if(msgChk(msg, sizeof(msg)) != strChk)
     return false;  
+  //SerialCom.println("checksum ok");
   // add checksum
   config.cksum = CheckSumConf(config);
 
@@ -246,9 +254,9 @@ void writeConfigStruc()
   for ( i = 0; i < sizeof(config); i++ ) {
     EEPROM.write(CONFIG_START + i, *((char*)&config + i));
   }
-  SerialCom.print(F("End address: "));
-  SerialCom.print(CONFIG_START + i);
-  SerialCom.print(F("EEPROM length: "));
+  //SerialCom.print(F("End address: "));
+  //SerialCom.print(CONFIG_START + i);
+  //SerialCom.print(F("EEPROM length: "));
   //Serial.print(EEPROM.length());
 }
 /*
@@ -258,7 +266,7 @@ void writeConfigStruc()
 */
 void printAltiConfig()
 {
-  char altiConfig[150] = "";
+  char altiConfig[120] = "";
   char temp[10] = "";
   bool ret = readAltiConfig();
   if (!ret)
