@@ -181,77 +181,7 @@ long logger_I2C_eeprom::getSizeOfFlightData()
 {
   return sizeof(_FlightData);
 }
-/*
-   PrintFlight(int flightNbr)
 
-*/
-/*void logger_I2C_eeprom::PrintFlight(int flightNbr)
-  {
-
-  long startaddress;
-  long endaddress;
-  startaddress = getFlightStart(flightNbr);
-  endaddress = getFlightStop(flightNbr);
-
-  if (startaddress > 200)
-  {
-    int i = startaddress;
-    unsigned long currentTime = 0;
-    SerialCom.println("StartFlight;" );
-    while (i < (endaddress + 1))
-    {
-      i = readFlight(i) + 1;
-
-      currentTime = currentTime + getFlightTimeData();
-
-      SerialCom.println(String(currentTime) + "," + getFlightAltitudeData()+"," +_FlightData.temperature);
-
-    }
-    SerialCom.println("EndFlight;" );
-  }
-  else
-    SerialCom.println(F("No such flight\n"));
-  }*/
-
-/*
-   printFlightData(int flightNbr)
-
-*/
-/*
-  void logger_I2C_eeprom::printFlightData(int flightNbr)
-  {
-  int startaddress;
-  int endaddress;
-
-  startaddress = getFlightStart(flightNbr);
-  endaddress = getFlightStop(flightNbr);
-
-  if (startaddress > 200)
-  {
-   int i = startaddress;
-   unsigned long currentTime = 0;
-
-   while (i < (endaddress + 1))
-   {
-     i = readFlight(i) + 1;
-
-     currentTime = currentTime + getFlightTimeData();
-
-     //SerialCom.println("$" + String("data,") + String(flightNbr) + "," + String(currentTime) +
-    // "," + String(getFlightAltitudeData()) + "," + String(_FlightData.temperature)+ ";");
-  SerialCom.print("$data,");
-  SerialCom.print(flightNbr);
-  SerialCom.print(",");
-  SerialCom.print(currentTime);
-  SerialCom.print(",");
-  SerialCom.print(getFlightAltitudeData());
-  SerialCom.print(",");
-  SerialCom.print(_FlightData.temperature);
-  SerialCom.print(";\n");
-   }
-
-  }
-  }*/
 void logger_I2C_eeprom::printFlightData(int flightNbr)
 {
   int startaddress;
@@ -271,22 +201,13 @@ void logger_I2C_eeprom::printFlightData(int flightNbr)
       char flightData[120] = "";
       char temp[9] = "";
       currentTime = currentTime + getFlightTimeData();
-      //SerialCom.print("$data,");
       strcat(flightData, "data,");
-      //SerialCom.print(flightNbr);
-      //SerialCom.print(",");
       sprintf(temp, "%i,", flightNbr );
       strcat(flightData, temp);
-      //SerialCom.print(currentTime);
-      //SerialCom.print(",");
       sprintf(temp, "%i,", currentTime );
       strcat(flightData, temp);
-      //SerialCom.print(getFlightAltitudeData());
-      //SerialCom.print(",");
       sprintf(temp, "%i,", getFlightAltitudeData() );
       strcat(flightData, temp);
-      //SerialCom.print(_FlightData.temperature);
-      //SerialCom.print(";\n");
       sprintf(temp, "%i,", _FlightData.temperature );
       strcat(flightData, temp);
       unsigned int chk = msgChk(flightData, sizeof(flightData));

@@ -1,6 +1,6 @@
 /*
-  Rocket Flight Logger ver 1.20
-  Copyright Boris du Reau 2012-2020
+  Rocket Flight Logger ver 1.21
+  Copyright Boris du Reau 2012-2021
 
   The following is a datalogger for logging rocket flight.
   So far it can log the rocket altitude during the flight.
@@ -799,121 +799,7 @@ void SendTelemetry(long sampleTime, int freq) {
     SerialCom.print(altiTelem);
   }
 }
-/*void SendTelemetry(long sampleTime, int freq) {
-  if (telemetryEnable && (millis() - lastTelemetry) > freq) {
-    lastTelemetry = millis();
-    int val = 0;
-    //check liftoff
-    int li = 0;
-    if (liftOff)
-      li = 1;
 
-    //check apogee
-    int ap = 0;
-    if (apogeeHasFired)
-      ap = 1;
-
-    //check main
-    int ma = 0;
-    if (mainHasFired)
-      ma = 1;
-    int landed = 0;
-    if ( mainHasFired && currAltitude < 10)
-      landed = 1;
-    SerialCom.print(F("$telemetry,"));
-    SerialCom.print(currAltitude);
-    SerialCom.print(F(","));
-    SerialCom.print(li);
-    SerialCom.print(F(","));
-    SerialCom.print(ap);
-    SerialCom.print(F(","));
-    SerialCom.print(apogeeAltitude);
-    SerialCom.print(F(","));
-    SerialCom.print(ma);
-    SerialCom.print(F(","));
-    SerialCom.print(mainAltitude);
-    SerialCom.print(F(","));
-    SerialCom.print(landed);
-    SerialCom.print(F(","));
-    SerialCom.print(sampleTime);
-    SerialCom.print(F(","));
-    if (out1Enable) {
-      //check continuity
-      val = digitalRead(pinChannel1Continuity);
-      if (val == 0)
-        SerialCom.print(0);
-      else
-        SerialCom.print(1);
-    }
-    else {
-      SerialCom.print(-1);
-    }
-    SerialCom.print(F(","));
-    if (out2Enable) {
-      //check continuity
-      val = digitalRead(pinChannel2Continuity);
-      delay(20);
-      if (val == 0)
-        SerialCom.print(0);
-      else
-        SerialCom.print(1);
-    }
-    else {
-      SerialCom.print(-1);
-    }
-    SerialCom.print(F(","));
-    if (out3Enable) {
-      //check continuity
-      val = digitalRead(pinChannel3Continuity);
-      if (val == 0)
-        SerialCom.print(0);
-      else
-        SerialCom.print(1);
-    }
-    else {
-      SerialCom.print(-1);
-    }
-  #ifdef NBR_PYRO_OUT4
-    SerialCom.print(F(","));
-    if (out4Enable) {
-      //check continuity
-      val = digitalRead(pinChannel4Continuity);
-      //delay(20);
-      if (val == 0)
-        SerialCom.print(0);
-      else
-        SerialCom.print(1);
-    }
-    else {
-      SerialCom.print(-1);
-    }
-  #else
-    SerialCom.print(F(","));
-    SerialCom.print(-1);
-  #endif
-  #ifdef ALTIMULTISTM32
-    SerialCom.print(F(","));
-    pinMode(PB1, INPUT_ANALOG);
-    int batVoltage = analogRead(PB1);
-    float bat = VOLT_DIVIDER * ((float)(batVoltage * 3300) / (float)4096000);
-    SerialCom.print(bat);
-  #else
-    SerialCom.print(F(","));
-    SerialCom.print(-1);
-  #endif
-    // temperature
-    SerialCom.print(F(","));
-    float temperature;
-    temperature = bmp.readTemperature();
-    SerialCom.print((int)temperature );
-    SerialCom.print(F(","));
-    //SerialCom.print(logger.getLastFlightEndAddress());
-    SerialCom.print((int)(100*((float)logger.getLastFlightEndAddress()/endAddress)));
-    SerialCom.print(F(","));
-    SerialCom.print(logger.getLastFlightNbr()+1);
-    SerialCom.println(F(";"));
-  }
-  }*/
 //================================================================
 // Main loop which call the menu
 //================================================================

@@ -229,14 +229,9 @@ bool writeAltiConfig( char *p ) {
   //we have a partial config
   if (i<23)
     return false;
-    //SerialCom.println("I am about to save");
-   // SerialCom.println(msg);
-   // SerialCom.println(strChk);
-    // SerialCom.println(msgChk(msg, strlen(msg)));
-    // SerialCom.println(strlen(msg));
+
   if(msgChk(msg, sizeof(msg)) != strChk)
     return false;  
-  //SerialCom.println("checksum ok");
   // add checksum
   config.cksum = CheckSumConf(config);
 
@@ -254,10 +249,6 @@ void writeConfigStruc()
   for ( i = 0; i < sizeof(config); i++ ) {
     EEPROM.write(CONFIG_START + i, *((char*)&config + i));
   }
-  //SerialCom.print(F("End address: "));
-  //SerialCom.print(CONFIG_START + i);
-  //SerialCom.print(F("EEPROM length: "));
-  //Serial.print(EEPROM.length());
 }
 /*
 
@@ -271,131 +262,78 @@ void printAltiConfig()
   bool ret = readAltiConfig();
   if (!ret)
     SerialCom.print(F("invalid conf"));
-  //SerialCom.print(F("$alticonfig"));
+
   strcat(altiConfig, "alticonfig,");
-  //SerialCom.print(F(","));
+  
   //Unit
-  //SerialCom.print(config.unit);
   sprintf(temp, "%i,", config.unit);
   strcat(altiConfig, temp);
-  //SerialCom.print(F(","));
   //beepingMode
-  //SerialCom.print(config.beepingMode);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.beepingMode);
   strcat(altiConfig, temp);
   //output1
-  //SerialCom.print(config.outPut1);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.outPut1);
   strcat(altiConfig, temp);
   //output2
-  //SerialCom.print(config.outPut2);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.outPut2);
   strcat(altiConfig, temp);
   //output3
-  //SerialCom.print(config.outPut3);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.outPut3);
   strcat(altiConfig, temp);
   //supersonicYesNo
-  //SerialCom.print(config.superSonicYesNo);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.superSonicYesNo);
   strcat(altiConfig, temp);
   //mainAltitude
-  //SerialCom.print(config.mainAltitude);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.mainAltitude);
   strcat(altiConfig, temp);
   //AltimeterName
-  //SerialCom.print(F(BOARD_FIRMWARE));
-  //SerialCom.print(F(","));
-  //sprintf(temp, "%s,", BOARD_FIRMWARE);
   strcat(altiConfig, BOARD_FIRMWARE);
    strcat(altiConfig,",");
   //alti major version
-  // SerialCom.print(MAJOR_VERSION);
   sprintf(temp, "%i,", MAJOR_VERSION);
   strcat(altiConfig, temp);
   //alti minor version
-  //SerialCom.print(F(","));
-  //SerialCom.print(MINOR_VERSION);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", MINOR_VERSION);
   strcat(altiConfig, temp);
   //output1 delay
-  //SerialCom.print(config.outPut1Delay);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.outPut1Delay);
   strcat(altiConfig, temp);
   //output2 delay
-  //SerialCom.print(config.outPut2Delay);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.outPut2Delay);
   strcat(altiConfig, temp);
   //output3 delay
-  //SerialCom.print(config.outPut3Delay);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.outPut3Delay);
   strcat(altiConfig, temp);
   //Beeping frequency
-  //SerialCom.print(config.beepingFrequency);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.beepingFrequency);
   strcat(altiConfig, temp);
-  //SerialCom.print(config.nbrOfMeasuresForApogee);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.nbrOfMeasuresForApogee);
   strcat(altiConfig, temp);
-  //SerialCom.print(config.endRecordAltitude);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.endRecordAltitude);
   strcat(altiConfig, temp);
-  //SerialCom.print(config.recordTemperature);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.recordTemperature);
   strcat(altiConfig, temp);
-  //SerialCom.print(config.superSonicDelay);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.superSonicDelay);
   strcat(altiConfig, temp);
-  //SerialCom.print(config.connectionSpeed);
-  //SerialCom.print(F(","));
   sprintf(temp, "%lu,", config.connectionSpeed);
   strcat(altiConfig, temp);
-  //SerialCom.print(config.altimeterResolution);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.altimeterResolution);
   strcat(altiConfig, temp);
-  //SerialCom.print(config.eepromSize);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.eepromSize);
   strcat(altiConfig, temp);
-  //SerialCom.print(config.noContinuity);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.noContinuity);
   strcat(altiConfig, temp);
   //output4
-  //SerialCom.print(config.outPut4);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.outPut4);
   strcat(altiConfig, temp);
   //output4 delay
-  //SerialCom.print(config.outPut4Delay);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.outPut4Delay);
   strcat(altiConfig, temp);
   //Lift off altitude
-  //SerialCom.print(config.liftOffAltitude);
-  //SerialCom.print(F(","));
   sprintf(temp, "%i,", config.liftOffAltitude);
   strcat(altiConfig, temp);
   //Battery type
-  //SerialCom.print(config.batteryType);
   sprintf(temp, "%i,", config.batteryType);
-  //SerialCom.print(F(";\n"));
   strcat(altiConfig, temp);
   unsigned int chk = 0;
   chk = msgChk( altiConfig, sizeof(altiConfig) );
