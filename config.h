@@ -49,7 +49,7 @@
 //////////// do not change anything after unless you know what you are doing /////////////////////
 
 #define MAJOR_VERSION 1
-#define MINOR_VERSION 21
+#define MINOR_VERSION 22
 #define BUILD 1
 #define CONFIG_START 32
 
@@ -114,6 +114,8 @@ extern int pinOut2;
 extern int pinOut1;
 
 extern int continuityPins[4];
+//pinLanding
+extern int pinLanding[];
 
 struct ConfigStruct {
   int unit;             //0 = meter 1 = feet

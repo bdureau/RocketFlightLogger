@@ -42,6 +42,8 @@ int pinOut4 = PA7;
 int pinOut2 = -1;
 int pinOut1 = -1;
 int continuityPins[4];
+//pinLanding
+int pinLanding[]= {-1, -1, -1, -1};
 ConfigStruct config;
 //================================================================
 // read and write in the microcontroler eeprom

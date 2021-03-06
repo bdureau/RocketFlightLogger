@@ -4,8 +4,7 @@
 #include "beepfunc.h"
 
 boolean noContinuity = false;
-//Our drogue has been ejected i.e: apogee has been detected
-boolean apogeeHasFired = false;
+
 
 boolean NoBeep = false;
 #ifdef ALTIMULTIV2
