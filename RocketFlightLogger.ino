@@ -1,5 +1,5 @@
 /*
-  Rocket Flight Logger ver 1.21
+  Rocket Flight Logger ver 1.22
   Copyright Boris du Reau 2012-2021
 
   The following is a datalogger for logging rocket flight.
@@ -82,6 +82,7 @@
   added checksum
   Major changes on version 1.22
   added landing event
+  added multiple main and drogue
 */
 
 //altimeter configuration lib
@@ -545,8 +546,8 @@ void setup()
 */
 void assignPyroOutputs()
 {
-  pinMain = -1;
-  pinApogee = -1;
+  //pinMain = -1;
+ // pinApogee = -1;
   pinOut1 = -1;
   pinOut2 = -1;
   pinOut3 = -1;
@@ -555,6 +556,8 @@ void assignPyroOutputs()
 #endif
  for (int a =0 ; a<4 ; a++ ) {
   pinLanding[a] =-1;
+  pinMain[a] = -1;
+  pinApogee[a] = -1;
  }
 
   switch (config.outPut1)
@@ -562,12 +565,12 @@ void assignPyroOutputs()
     case 0:
       mainEvent_Enable = true;
       mainDelay = config.outPut1Delay;
-      pinMain = pyroOut1;
+      pinMain[0] = pyroOut1;
       break;
     case 1:
       apogeeEvent_Enable = true;
       apogeeDelay = config.outPut1Delay;
-      pinApogee = pyroOut1;
+      pinApogee[0] = pyroOut1;
       break;
     case 2:
       timerEvent1_enable = true;
@@ -588,12 +591,12 @@ void assignPyroOutputs()
   {
     case 0:
       mainEvent_Enable = true;
-      pinMain = pyroOut2;
+      pinMain[1] = pyroOut2;
       mainDelay = config.outPut2Delay;
       break;
     case 1:
       apogeeEvent_Enable = true;
-      pinApogee = pyroOut2;
+      pinApogee[1] = pyroOut2;
       apogeeDelay = config.outPut2Delay;
       break;
     case 2:
@@ -615,12 +618,12 @@ void assignPyroOutputs()
     case 0:
       mainEvent_Enable = true;
       mainDelay = config.outPut3Delay;
-      pinMain = pyroOut3;
+      pinMain[2] = pyroOut3;
       break;
     case 1:
       apogeeEvent_Enable = true;
       apogeeDelay = config.outPut3Delay;
-      pinApogee = pyroOut3;
+      pinApogee[2] = pyroOut3;
       break;
     case 2:
       timerEvent3_enable = true;
@@ -643,12 +646,12 @@ void assignPyroOutputs()
     case 0:
       mainEvent_Enable = true;
       mainDelay = config.outPut4Delay;
-      pinMain = pyroOut4;
+      pinMain[3] = pyroOut4;
       break;
     case 1:
       apogeeEvent_Enable = true;
       apogeeDelay = config.outPut4Delay;
-      pinApogee = pyroOut4;
+      pinApogee[3] = pyroOut4;
       break;
     case 2:
       timerEvent4_enable = true;
@@ -1098,8 +1101,12 @@ void recordAltitude()
         if ((millis() - apogeeStartTime) >= apogeeDelay)
         {
           //fire drogue
-          digitalWrite(pinApogee, HIGH);
-          setEventState(pinApogee, true);
+          //digitalWrite(pinApogee, HIGH);
+          for (int ap=0; ap < 4; ap++ ) {
+              digitalWrite(pinApogee[ap], HIGH);
+              setEventState(pinApogee[ap], true);
+          }
+          
 #ifdef SERIAL_DEBUG
           SerialCom.println(F("Apogee has fired"));
 #endif
@@ -1112,7 +1119,10 @@ void recordAltitude()
       if ((currAltitude  < mainDeployAltitude) && apogeeHasFired && !mainHasFired)
       {
         // Deploy main chute  X meters or feet  before landing...
-        digitalWrite(pinApogee, LOW);
+        //digitalWrite(pinApogee, LOW);
+        for (int ap=0; ap < 4; ap++ ) {
+              digitalWrite(pinApogee[ap], LOW);
+        }
 #ifdef SERIAL_DEBUG
         SerialCom.println(F("Apogee firing complete"));
 #endif
@@ -1121,8 +1131,7 @@ void recordAltitude()
         SerialCom.println(F("preparing main"));
 #endif
         mainStartTime = millis();
-        //digitalWrite(pinMain, HIGH);
-        //mainHasFired=true;
+        
         mainAltitude = currAltitude;
 #ifdef SERIAL_DEBUG
         SerialCom.println(F("main altitude"));
@@ -1138,9 +1147,11 @@ void recordAltitude()
 #ifdef SERIAL_DEBUG
           SerialCom.println(F("firing main"));
 #endif
-          digitalWrite(pinMain, HIGH);
+          //digitalWrite(pinMain, HIGH);
+          for (int ma=0; ma < 4; ma++ ) {
+              digitalWrite(pinMain[ma], HIGH);
+          }
           mainReadyToFire = false;
-          //setEventState(pinMain, true);
           mainHasFired = true;
           SendTelemetry(millis() - initialTime, 200);
         }
@@ -1151,9 +1162,13 @@ void recordAltitude()
 
         if ((millis() - (mainStartTime + mainDelay)) >= 1000 && MainFiredComplete == false)
         {
-          digitalWrite(pinMain, LOW);
-          setEventState(pinMain, true);
-          //liftOff =false;
+          //digitalWrite(pinMain, LOW);
+           for (int ma=0; ma < 4; ma++ ) {
+              digitalWrite(pinMain[ma], LOW);
+              setEventState(pinMain[ma], true);
+          }
+          
+   
 #ifdef SERIAL_DEBUG
           SerialCom.println("Main fired");
 #endif

@@ -97,10 +97,10 @@
 
 //pyro out 1
 extern const int pyroOut1;
-extern int pinApogee;
+extern int pinApogee[4];
 //pyro out 2
 extern const int pyroOut2;
-extern int pinMain;
+extern int pinMain[4];
 //pyro out 3
 extern const int pyroOut3;
 extern int pinOut3;

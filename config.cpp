@@ -7,24 +7,29 @@ int pinApogee = PA1;
 #endif
 #ifdef ALTIMULTIV2
 const int pyroOut1 = 12; 
-int pinApogee = 12; 
+//int pinApogee = 12; 
+int pinApogee[]= {-1, -1, -1, -1};
 #endif
 #ifdef ALTIMULTI
 const int pyroOut1 = 9;
-int pinApogee = 9;
+//int pinApogee = 9;
+int pinApogee[]= {-1, -1, -1, -1};
 #endif
 //pyro out 2
 #ifdef ALTIMULTIV2
 const int pyroOut2 = 9; 
-int pinMain = 9;
+//int pinMain = 9;
+int pinMain[]= {-1, -1, -1, -1};
 #endif
 #ifdef ALTIMULTI
 const int pyroOut2 = 13;
-int pinMain = 13;
+//int pinMain = 13;
+int pinMain[]= {-1, -1, -1, -1};
 #endif
 #ifdef ALTIMULTISTM32
 const int pyroOut2 = PA3;
-int pinMain = PA3;
+//int pinMain = PA3;
+int pinMain[]= {-1, -1, -1, -1};
 #endif
 //pyro out 3
 #ifdef ALTIMULTISTM32
