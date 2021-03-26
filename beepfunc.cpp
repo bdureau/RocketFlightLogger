@@ -194,7 +194,7 @@ void continuityCheckAsync()
 {
 
   int val = 0;     // variable to store the read value
-  if (!noContinuity && !apogeeHasFired)
+  if (!noContinuity && !allApogeeFiredComplete )
   {
     if ((millis() - savedDelay ) > bigdelay ) {
       if (lastPin == -1)
