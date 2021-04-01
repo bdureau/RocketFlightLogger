@@ -32,7 +32,7 @@ struct FlightConfigStruct {
 // The DEFAULT page size. This is overriden if you use the second constructor.
 // I2C_EEPROM_PAGESIZE must be multiple of 2 e.g. 16, 32 or 64
 // 24LC256 -> 64 bytes
-#define LOGGER_I2C_EEPROM_PAGESIZE 64
+#define LOGGER_I2C_EEPROM_PAGESIZE 128 //64
 #define FLIGHT_LIST_START 0
 #define FLIGHT_DATA_START 200
 class logger_I2C_eeprom
@@ -42,14 +42,14 @@ public:
      * Initializes the EEPROM with a default pagesize of I2C_EEPROM_PAGESIZE.
      */
     logger_I2C_eeprom(uint8_t deviceAddress);
-    logger_I2C_eeprom(uint8_t deviceAddress, const unsigned int deviceSize);
+    //logger_I2C_eeprom(uint8_t deviceAddress, const unsigned int deviceSize);
     uint8_t _deviceAddress;
     void begin();
     void clearFlightList();
-    void write_byte( unsigned int eeaddress, uint8_t data );
-    uint8_t read_byte(  unsigned int eeaddress );
-    int readFlight(int eeaddress);
-    int writeFlight(int eeaddress);
+    void write_byte( unsigned long eeaddress, uint8_t data );
+    uint8_t read_byte(  unsigned long eeaddress );
+    unsigned long readFlight(unsigned long eeaddress);
+    //int writeFlight(unsigned long eeaddress);
     int readFlightList();
     int writeFlightList();
     int getLastFlightNbr();
@@ -65,7 +65,7 @@ public:
     long getFlightStop(int flightNbr);
     void printFlightData(int flightNbr);
     boolean CanRecord();
-    int writeFastFlight(int eeaddress);
+    unsigned long writeFastFlight(unsigned long eeaddress);
     long getSizeOfFlightData();
     long getLastFlightEndAddress();
     

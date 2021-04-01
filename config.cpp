@@ -3,54 +3,36 @@
 //pyro out 1
 #ifdef ALTIMULTISTM32
 const int pyroOut1 = PA1;
-int pinApogee = PA1;
 #endif
 #ifdef ALTIMULTIV2
-const int pyroOut1 = 12; 
-//int pinApogee = 12; 
-int pinApogee[]= {-1, -1, -1, -1};
+const int pyroOut1 = 9; //12; 
 #endif
 #ifdef ALTIMULTI
 const int pyroOut1 = 9;
-//int pinApogee = 9;
-int pinApogee[]= {-1, -1, -1, -1};
 #endif
 //pyro out 2
 #ifdef ALTIMULTIV2
-const int pyroOut2 = 9; 
-//int pinMain = 9;
-int pinMain[]= {-1, -1, -1, -1};
+const int pyroOut2 = 12; //9; 
 #endif
 #ifdef ALTIMULTI
 const int pyroOut2 = 13;
-//int pinMain = 13;
-int pinMain[]= {-1, -1, -1, -1};
 #endif
 #ifdef ALTIMULTISTM32
 const int pyroOut2 = PA3;
-//int pinMain = PA3;
-int pinMain[]= {-1, -1, -1, -1};
 #endif
 //pyro out 3
 #ifdef ALTIMULTISTM32
 const int pyroOut3 = PA5; //17;
-int pinOut3 = PA5;//17;
 #else
 const int pyroOut3 = 17;
-int pinOut3 = 17;
 #endif
 //pyro out 4
 #ifdef ALTIMULTISTM32
 const int pyroOut4 = PA7;
-int pinOut4 = PA7;
 #endif
-int pinOut2 = -1;
-int pinOut1 = -1;
+
 int continuityPins[4];
-//pinLanding
-int pinLanding[]= {-1, -1, -1, -1};
-//PinLiftOff
-int pinLiftOff[]= {-1, -1, -1, -1};
+
 ConfigStruct config;
 //================================================================
 // read and write in the microcontroler eeprom
@@ -99,25 +81,7 @@ bool readAltiConfig() {
 
 }
 
-/*int getOutPin(int value)
-  {
 
-  switch (value)
-  {
-  case 0:
-    pinMain = pyroOut1;
-    break;
-  case 1:
-    pinApogee = pyroOut2;
-    break;
-  case 2:
-    pinOut3 = pyroOut3;
-    break;
-  default:
-    break;
-  }
-  return 1;
-  }*/
 /*
   write the config received by the console
 
@@ -266,6 +230,8 @@ void writeConfigStruc()
 */
 void printAltiConfig()
 {
+  // char *altiConfig;
+ // altiConfig = (char *) malloc(120);
   char altiConfig[120] = "";
   char temp[10] = "";
   bool ret = readAltiConfig();
@@ -352,7 +318,7 @@ void printAltiConfig()
   SerialCom.print("$");
   SerialCom.print(altiConfig);
 
-
+//free(altiConfig);
 }
 bool CheckValideBaudRate(long baudRate)
 {

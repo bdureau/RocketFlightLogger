@@ -17,14 +17,14 @@
 // here choose one of the board that you want to use
 // note that you will need to compile using the Arduino Uno or SMT32 board
 // if you have the original ALTIMULTI board using an ATMega328 define ALTIMULTI
-#define ALTIMULTI
+//#define ALTIMULTI
 
 // if you have a modified ALTIMULTI board using an ATMega328 using different Arduino pins for the
 // pyro output so that they do not fire following a reset of the board then define ALTIMULTIV2
 //#define ALTIMULTIV2
 
 // if you have the STM32 shield then define ALTIMULTISTM32
-//#define ALTIMULTISTM32
+#define ALTIMULTISTM32
 
 // choose the pressure sensor that you are using
 // for most board the pressure sensor is either BMP085 or BMP180 
@@ -49,7 +49,7 @@
 //////////// do not change anything after unless you know what you are doing /////////////////////
 
 #define MAJOR_VERSION 1
-#define MINOR_VERSION 22
+#define MINOR_VERSION 23
 #define BUILD 1
 #define CONFIG_START 32
 
@@ -93,36 +93,25 @@
 //used for writing in the microcontroler internal eeprom
 #include <EEPROM.h>
 
-//#include "avdweb_VirtualDelay.h"
 
 //pyro out 1
 extern const int pyroOut1;
-extern int pinApogee[4];
 //pyro out 2
 extern const int pyroOut2;
-extern int pinMain[4];
 //pyro out 3
 extern const int pyroOut3;
-extern int pinOut3;
 #ifdef ALTIMULTISTM32
 //pyro out 4
 extern const int pyroOut4;
-extern int pinOut4;
 #endif
 
-extern int pinOut2;
-extern int pinOut1;
-
 extern int continuityPins[4];
-//pinLanding
-extern int pinLanding[];
-//pinLiftOff
-extern int pinLiftOff[];
+
 
 struct ConfigStruct {
   int unit;             //0 = meter 1 = feet
   int beepingMode;      // decide which way you want to report the altitude
-  int outPut1;          // assign a function to each pyro
+  int outPut1;          // assign a function to each pyro 0 = main 1 = drogue 2 = timer 4 = landing 5 = liftoff 3 = disable
   int outPut2;
   int outPut3;
   int mainAltitude;     //deployment altitude for the main chute

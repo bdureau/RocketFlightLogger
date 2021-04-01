@@ -43,7 +43,7 @@ int logger_I2C_eeprom::readFlightList()
    readFlight(int eeaddress)
 
 */
-int logger_I2C_eeprom::readFlight(int eeaddress)
+unsigned long logger_I2C_eeprom::readFlight(unsigned long eeaddress)
 {
   eep.read(eeaddress, ((byte*)&_FlightData), sizeof(_FlightData));
   return eeaddress + sizeof(_FlightData);
@@ -63,7 +63,7 @@ int logger_I2C_eeprom::writeFlightList()
    writeFastFlight(int eeaddress)
 
 */
-int logger_I2C_eeprom::writeFastFlight(int eeaddress)
+unsigned long logger_I2C_eeprom::writeFastFlight(unsigned long eeaddress)
 {
   eep.write(eeaddress, ((byte*)&_FlightData), sizeof(_FlightData));
   return eeaddress + sizeof(_FlightData);
@@ -184,15 +184,15 @@ long logger_I2C_eeprom::getSizeOfFlightData()
 
 void logger_I2C_eeprom::printFlightData(int flightNbr)
 {
-  int startaddress;
-  int endaddress;
+  unsigned long startaddress;
+  unsigned long endaddress;
 
   startaddress = getFlightStart(flightNbr);
   endaddress = getFlightStop(flightNbr);
 
   if (startaddress > 200)
   {
-    int i = startaddress;
+    unsigned long i = startaddress;
     unsigned long currentTime = 0;
 
     while (i < (endaddress + 1))
