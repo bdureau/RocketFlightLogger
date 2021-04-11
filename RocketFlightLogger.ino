@@ -88,6 +88,7 @@
   Fixes to the delays when multiple event of the same type
    Major changes on version 1.24
   Optimise the code so that it uses less global variables
+  Added altitude event
 */
 
 //altimeter configuration lib
@@ -220,6 +221,7 @@ boolean allMainFiredComplete = false;
 boolean allTimerFiredComplete = false;
 boolean allLiftOffFiredComplete = false;
 boolean allLandingFiredComplete = false;
+boolean allAltitudeFiredComplete = false;
 
 
 //telemetry
@@ -275,13 +277,14 @@ double ReadAltitude()
 void ResetGlobalVar() {
 
   exitRecording = false;
- 
+
   allApogeeFiredComplete = false;
   allMainFiredComplete = false;
   allTimerFiredComplete = false;
   allLiftOffFiredComplete = false;
   allLandingFiredComplete = false;
-  
+  allAltitudeFiredComplete = false;
+
   liftOff = false;
   apogeeAltitude = 0;
   mainAltitude = 0;
@@ -323,20 +326,20 @@ void initAlti() {
   //check which pyro are enabled
   pos = -1;
 
-  if (config.outPut1 !=3) {
+  if (config.outPut1 != 3) {
     pos++;
     continuityPins[pos] = pinChannel1Continuity;
   }
-  if (config.outPut2 !=3) {
+  if (config.outPut2 != 3) {
     pos++;
     continuityPins[pos] = pinChannel2Continuity;
   }
-  if (config.outPut3 !=3) {
+  if (config.outPut3 != 3) {
     pos++;
     continuityPins[pos] = pinChannel3Continuity;
   }
 #ifdef NBR_PYRO_OUT4
-  if (config.outPut4 !=3)  {
+  if (config.outPut4 != 3)  {
     pos++;
     continuityPins[pos] = pinChannel4Continuity;
   }
@@ -535,8 +538,8 @@ void setup()
 
 
 /*
- * setEventState(int pyroOut, boolean state)
- *  Set the state of the output
+   setEventState(int pyroOut, boolean state)
+    Set the state of the output
 */
 void setEventState(int pyroOut, boolean state)
 {
@@ -574,7 +577,7 @@ void setEventState(int pyroOut, boolean state)
 #endif
 }
 /*
- * SendTelemetry(long sampleTime, int freq)
+   SendTelemetry(long sampleTime, int freq)
    Send telemety so that we can plot the flight
 
 */
@@ -621,7 +624,7 @@ void SendTelemetry(long sampleTime, int freq) {
     strcat(altiTelem, temp);
     sprintf(temp, "%i,", sampleTime);
     strcat(altiTelem, temp);
-    if (config.outPut1 !=3) {
+    if (config.outPut1 != 3) {
       //check continuity
       val = digitalRead(pinChannel1Continuity);
       if (val == 0)
@@ -632,7 +635,7 @@ void SendTelemetry(long sampleTime, int freq) {
     else {
       strcat(altiTelem, "-1,");
     }
-    if (config.outPut2 !=3) {
+    if (config.outPut2 != 3) {
       //check continuity
       val = digitalRead(pinChannel2Continuity);
       delay(20);
@@ -644,7 +647,7 @@ void SendTelemetry(long sampleTime, int freq) {
     else {
       strcat(altiTelem, "-1,");
     }
-    if (config.outPut3 !=3) {
+    if (config.outPut3 != 3) {
       //check continuity
       val = digitalRead(pinChannel3Continuity);
       if (val == 0)
@@ -656,7 +659,7 @@ void SendTelemetry(long sampleTime, int freq) {
       strcat(altiTelem, "-1,");
     }
 #ifdef NBR_PYRO_OUT4
-    if (config.outPut4 !=3) {
+    if (config.outPut4 != 3) {
       //check continuity
       val = digitalRead(pinChannel4Continuity);
       if (val == 0)
@@ -709,8 +712,8 @@ void loop()
   MainMenu();
 }
 /*
- * Calculate the current velocity
- */
+   Calculate the current velocity
+*/
 int currentVelocity(long prevTime, long curTime, int prevAltitude, int curAltitude)
 {
   int curSpeed = int (float(curAltitude - prevAltitude) / (float( curTime - prevTime) / 1000));
@@ -723,7 +726,6 @@ int currentVelocity(long prevTime, long curTime, int prevAltitude, int curAltitu
 //================================================================
 void recordAltitude()
 {
-
   ResetGlobalVar();
 
   boolean OutputFiredComplete[4] = {false, false, false, false};
@@ -734,7 +736,7 @@ void recordAltitude()
 #ifdef ALTIMULTISTM32
   OutputDelay[3] = config.outPut4Delay;
 #endif
-  // 0 = main 1 = drogue 2 = timer 4 = landing 5 = liftoff 3 = disable
+  // 0 = main 1 = drogue 2 = timer 4 = landing 5 = liftoff 3 = disable 6 = altitude
   int OutputType[4] = {3, 3, 3, 3};
   OutputType[0] = config.outPut1;
   OutputType[1] = config.outPut2;
@@ -754,8 +756,8 @@ void recordAltitude()
     OutputPins[3] = pyroOut4;
 #endif
 
-  
-  
+
+
   boolean apogeeReadyToFire = false;
   boolean mainReadyToFire = false;
   boolean landingReadyToFire = false;
@@ -765,16 +767,17 @@ void recordAltitude()
   unsigned long landingStartTime = 0;
   unsigned long liftOffStartTime = 0;
   boolean ignoreAltiMeasure = false;
+  unsigned long altitudeStartTime[] = {0, 0, 0, 0};
 
   boolean liftOffHasFired = false;
   //hold the state of all our outputs
   boolean outputHasFired[4] = {false, false, false, false};
 
-  if (config.outPut1 ==3) Output1Fired = true;
-  if (config.outPut2 ==3) Output2Fired = true;
-  if (config.outPut3 ==3) Output3Fired = true;
+  if (config.outPut1 == 3) Output1Fired = true;
+  if (config.outPut2 == 3) Output2Fired = true;
+  if (config.outPut3 == 3) Output3Fired = true;
 #ifdef NBR_PYRO_OUT4
-  if (config.outPut4 ==3) Output4Fired = true;
+  if (config.outPut4 == 3) Output4Fired = true;
 #endif
 
 #ifdef SERIAL_DEBUG
@@ -872,7 +875,37 @@ void recordAltitude()
         }
         SendTelemetry(millis() - initialTime, 200);
       }
-     
+
+      //altitude events
+      if (!allAltitudeFiredComplete) {
+        //fire all altitude that are ready
+        for (int al = 0; al < 4; al++ ) {
+          if (!outputHasFired[al] && ((currAltitude >= OutputDelay[al]) ) && OutputType[al] == 6) {
+            digitalWrite(OutputPins[al], HIGH);
+            outputHasFired[al] = true;
+            altitudeStartTime[al] = millis();
+          }
+        }
+        for (int al = 0; al < 4; al++ ) {
+          if (( millis()  >= (1000 + altitudeStartTime[al]))  && !OutputFiredComplete[al] && OutputType[al] == 6 && outputHasFired[al])
+          {
+            digitalWrite(OutputPins[al], LOW);
+            setEventState(OutputPins[al], true);
+            OutputFiredComplete[al] = true;
+          }
+        }
+
+        allAltitudeFiredComplete = true;
+
+        for (int al = 0; al < 4; al++ ) {
+          if (!OutputFiredComplete[al] && OutputType[al] == 6)
+          {
+            allAltitudeFiredComplete = false;
+          }
+        }
+        SendTelemetry(millis() - initialTime, 200);
+      }
+      // timer events
       if (!allTimerFiredComplete) {
         //fire all timers that are ready
         for (int ti = 0; ti < 4; ti++ ) {
@@ -1018,7 +1051,7 @@ void recordAltitude()
         SendTelemetry(millis() - initialTime, 200);
       }
 
-    
+
 
       if (landingReadyToFire && !allLandingFiredComplete) {
         //fire all landing that are ready
@@ -1458,7 +1491,7 @@ void interpretCommandBuffer(char *commandbuffer) {
 */
 void resetFlight() {
 
- 
+
   allApogeeFiredComplete  = false;
   allMainFiredComplete = false;
   allTimerFiredComplete = false;

@@ -49,7 +49,7 @@
 //////////// do not change anything after unless you know what you are doing /////////////////////
 
 #define MAJOR_VERSION 1
-#define MINOR_VERSION 23
+#define MINOR_VERSION 24
 #define BUILD 1
 #define CONFIG_START 32
 
