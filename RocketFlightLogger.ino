@@ -152,6 +152,7 @@ long currAltitude;
 //Apogee altitude
 long apogeeAltitude;
 long mainAltitude;
+long drogueFiredAltitude;
 
 boolean liftOff = false;
 unsigned long initialTime;
@@ -227,6 +228,7 @@ boolean allAltitudeFiredComplete = false;
 //telemetry
 boolean telemetryEnable = false;
 long lastTelemetry = 0;
+long lastBattWarning = 0;
 
 
 
@@ -372,6 +374,7 @@ void setup()
   if (!CheckValideBaudRate(config.connectionSpeed))
   {
     config.connectionSpeed = 38400;
+    config.cksum = CheckSumConf(config);
     writeConfigStruc();
   }
 
@@ -387,7 +390,7 @@ void setup()
   //and change it to 57600, 115200 etc..
   //Serial.begin(BAUD_RATE);
   SerialCom.begin(config.connectionSpeed);
-  //SerialCom.begin(38400);
+
 
   //  pinMode(A0, INPUT);
 #ifdef ALTIMULTI
@@ -658,7 +661,8 @@ void SendTelemetry(long sampleTime, int freq) {
     else {
       strcat(altiTelem, "-1,");
     }
-#ifdef NBR_PYRO_OUT4
+//#ifdef NBR_PYRO_OUT4
+#ifdef ALTIMULTISTM32
     if (config.outPut4 != 3) {
       //check continuity
       val = digitalRead(pinChannel4Continuity);
@@ -677,8 +681,10 @@ void SendTelemetry(long sampleTime, int freq) {
     pinMode(PB1, INPUT_ANALOG);
     int batVoltage = analogRead(PB1);
     float bat = VOLT_DIVIDER * ((float)(batVoltage * 3300) / (float)4096000);
-    sprintf(temp, "%f,", bat);
+    //sprintf(temp, "%f,", bat);
+    dtostrf(bat, 4, 2, temp);
     strcat(altiTelem, temp);
+     strcat(altiTelem, ",");
 #else
     strcat(altiTelem, "-1,");
 #endif
@@ -693,6 +699,10 @@ void SendTelemetry(long sampleTime, int freq) {
     sprintf(temp, "%i,", logger.getLastFlightNbr() + 1 );
     strcat(altiTelem, temp);
 
+    //drogueFiredAltitude
+    sprintf(temp, "%i,",drogueFiredAltitude);
+    strcat(altiTelem, temp);
+    
     unsigned int chk;
     chk = msgChk(altiTelem, sizeof(altiTelem));
     sprintf(temp, "%i", chk);
@@ -830,7 +840,7 @@ void recordAltitude()
       currAltitude = (ReadAltitude() - initialAltitude);
 
       currentTime = millis() - initialTime;
-      if (allMainFiredComplete && !allLandingFiredComplete && !landingReadyToFire) {
+      if (allMainFiredComplete && !allLandingFiredComplete && !landingReadyToFire && currAltitude < 10) {
 
         if (abs(currentVelocity(prevTime, currentTime, prevAltitude, currAltitude)) < 1  ) {
           //we have landed
@@ -965,7 +975,8 @@ void recordAltitude()
           //fire drogue
           apogeeReadyToFire = true;
           apogeeStartTime = millis();
-          apogeeAltitude = currAltitude;
+          drogueFiredAltitude = currAltitude;
+          apogeeAltitude =lastAltitude;
         }
       }
       else
@@ -1276,9 +1287,7 @@ void interpretCommandBuffer(char *commandbuffer) {
   else if (commandbuffer[0] == 'r')
   {
     char temp[3];
-    SerialCom.println(F("Read flight: "));
-    SerialCom.println( commandbuffer[1]);
-    SerialCom.println( "\n");
+       
     temp[0] = commandbuffer[1];
     if (commandbuffer[2] != '\0')
     {
@@ -1290,11 +1299,9 @@ void interpretCommandBuffer(char *commandbuffer) {
 
     if (atol(temp) > -1)
     {
-      //printFlight(atol(temp));
-      SerialCom.println("StartFlight;" );
-      //logger.PrintFlight(atoi(temp));
+      SerialCom.print(F("$start;\n"));
       logger.printFlightData(atoi(temp));
-      SerialCom.println("EndFlight;" );
+      SerialCom.print(F("$end;\n"));
     }
     else
       SerialCom.println(F("not a valid flight"));
@@ -1308,10 +1315,24 @@ void interpretCommandBuffer(char *commandbuffer) {
   //Number of flight
   else if (commandbuffer[0] == 'n')
   {
-    SerialCom.println(F("Number of flight \n"));
-    SerialCom.print(F("n;"));
+    //SerialCom.println(F("Number of flight \n"));
+    //SerialCom.print(F("n;"));
     //Serial.println(getFlightList());
-    logger.printFlightList();
+    //logger.printFlightList();
+    char flightData[30] = "";
+    char temp[9] = "";
+    SerialCom.print(F("$start;\n"));
+    strcat(flightData, "nbrOfFlight,");
+    sprintf(temp, "%i,", logger.getLastFlightNbr()+1 );
+    strcat(flightData, temp);
+    unsigned int chk = msgChk(flightData, sizeof(flightData));
+    sprintf(temp, "%i", chk);
+    strcat(flightData, temp);
+    strcat(flightData, ";\n");
+    SerialCom.print("$");
+    SerialCom.print(flightData);
+    SerialCom.print(F("$end;\n"));
+    
   }
   //list all flights
   else if (commandbuffer[0] == 'l')
@@ -1473,6 +1494,11 @@ void interpretCommandBuffer(char *commandbuffer) {
     }
     SerialCom.print(F("$OK;\n"));
   }
+  //delete last curve
+  else if (commandbuffer[0] == 'x')
+  {
+    logger.eraseLastFlight();
+  }
   // empty command
   else if (commandbuffer[0] == ' ')
   {
@@ -1528,6 +1554,8 @@ void resetFlight() {
 */
 void checkBatVoltage(float minVolt) {
 #ifdef ALTIMULTISTM32
+if ((millis() - lastBattWarning) > 10000) {
+    lastBattWarning = millis();
   pinMode(PB1, INPUT_ANALOG);
   int batVoltage = analogRead(PB1);
 
@@ -1542,6 +1570,7 @@ void checkBatVoltage(float minVolt) {
     }
     delay(1000);
   }
+}
 #endif
 
 }
