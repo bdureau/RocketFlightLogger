@@ -53,6 +53,7 @@ public:
     int readFlightList();
     int writeFlightList();
     int getLastFlightNbr();
+    bool eraseLastFlight();
     int printFlightList();
     void setFlightStartAddress(int flightNbr, long startAddress);
     void setFlightEndAddress(int flightNbr, long endAddress);
