@@ -49,7 +49,7 @@
 //////////// do not change anything after unless you know what you are doing /////////////////////
 
 #define MAJOR_VERSION 1
-#define MINOR_VERSION 24
+#define MINOR_VERSION 25
 #define BUILD 1
 #define CONFIG_START 32
 
@@ -134,6 +134,7 @@ struct ConfigStruct {
   //#endif
   int liftOffAltitude; //Lift off Altitude in meters
   int batteryType; // 0= Unknown, 1= "2S (7.4 Volts)", 2 = "9 Volts",3 = "3S (11.1 Volts)
+  int recordingTimeout; // in Seconds
   int cksum;  
 };
 extern ConfigStruct config;

@@ -63,8 +63,10 @@ void defaultConfig()
   config.outPut4Delay = 0;
   config.liftOffAltitude = 10;
   config.batteryType = 0;
+  config.recordingTimeout = 120;
   config.cksum = CheckSumConf(config);
 }
+
 bool readAltiConfig() {
   //set the config to default values so that if any have not been configured we can use the default ones
   defaultConfig();
@@ -191,7 +193,11 @@ bool writeAltiConfig( char *p ) {
         strcat(msg, str);
         //strcat(msg, "\0");
         break;
-      case 24:
+      case 24:  
+        config.recordingTimeout = atoi(str);
+         strcat(msg, str);
+        break;
+      case 25:
         //our checksum
         strChk= atoi(str);
         break;
@@ -200,7 +206,7 @@ bool writeAltiConfig( char *p ) {
 
   }
   //we have a partial config
-  if (i<23)
+  if (i<24)
     return false;
 
   if(msgChk(msg, sizeof(msg)) != strChk)
@@ -309,6 +315,9 @@ void printAltiConfig()
   strcat(altiConfig, temp);
   //Battery type
   sprintf(temp, "%i,", config.batteryType);
+  strcat(altiConfig, temp);
+  // recording timeout
+  sprintf(temp, "%i,", config.recordingTimeout);
   strcat(altiConfig, temp);
   unsigned int chk = 0;
   chk = msgChk( altiConfig, sizeof(altiConfig) );
