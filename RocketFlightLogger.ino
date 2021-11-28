@@ -1,5 +1,5 @@
 /*
-  Rocket Flight Logger ver 1.24
+  Rocket Flight Logger ver 1.25
   Copyright Boris du Reau 2012-2021
 
   The following is a datalogger for logging rocket flight.
@@ -8,7 +8,23 @@
 
 
   This is using a BMP085 or BMP180 presure sensor and an Atmega 328 or an STM32
-  The following record the flight in an EEPROM
+  The compatible boards are Altimulti, AltimultiV2 and AltiMultiSTM32. To complile the
+  firmware to the various board go to the config.h file and select one of the 
+  following compilation directive
+  #define ALTIMULTI
+  #define ALTIMULTIV2
+  #define ALTIMULTISTM32
+
+  Then on your Arduino environment select the appropriate boards:
+  Arduino Uno => AltiMulti and AltiMultiV2
+  Generic STM32F103C series => AltimultiSTM32
+  
+  The following record the flight (altitude, temperature, pressure) in an EEPROM.
+  Note that internally the altimeter is working is metric, for conveniance the beeping 
+  altitude can be changed to feet.
+  You can query the board using AT commands or you can use the Android front end.
+  Note that if you do not want to compile the firmware and/or the Android front end you 
+  can get everything on the Android play store, just search for BearConsole
 
 
   For the BMP085 or BMP180 pressure sensor
@@ -89,6 +105,10 @@
    Major changes on version 1.24
   Optimise the code so that it uses less global variables
   Added altitude event
+  Major changes on version 1.25
+  Added recording timeout
+  Retreive flights one by one so that it can be cancelled
+  Adding telemetry module connection test
 */
 
 //altimeter configuration lib
@@ -207,7 +227,7 @@ const int pinChannel2Continuity = 10;//11;
 const int pinChannel3Continuity = 16;
 #endif
 
-//#define NBR_MEASURE_APOGEE 5
+
 float FEET_IN_METER = 1;
 
 
@@ -277,6 +297,7 @@ double ReadAltitude()
 
 */
 void ResetGlobalVar() {
+  recordingTimeOut = config.recordingTimeout * 1000;
 
   exitRecording = false;
 
@@ -379,10 +400,8 @@ void setup()
   }
 
   initAlti();
-
   // init Kalman filter
   KalmanInit();
-
   // initialise the connection
   Wire.begin();
 
@@ -661,7 +680,7 @@ void SendTelemetry(long sampleTime, int freq) {
     else {
       strcat(altiTelem, "-1,");
     }
-//#ifdef NBR_PYRO_OUT4
+    //#ifdef NBR_PYRO_OUT4
 #ifdef ALTIMULTISTM32
     if (config.outPut4 != 3) {
       //check continuity
@@ -684,7 +703,7 @@ void SendTelemetry(long sampleTime, int freq) {
     //sprintf(temp, "%f,", bat);
     dtostrf(bat, 4, 2, temp);
     strcat(altiTelem, temp);
-     strcat(altiTelem, ",");
+    strcat(altiTelem, ",");
 #else
     strcat(altiTelem, "-1,");
 #endif
@@ -700,9 +719,9 @@ void SendTelemetry(long sampleTime, int freq) {
     strcat(altiTelem, temp);
 
     //drogueFiredAltitude
-    sprintf(temp, "%i,",drogueFiredAltitude);
+    sprintf(temp, "%i,", drogueFiredAltitude);
     strcat(altiTelem, temp);
-    
+
     unsigned int chk;
     chk = msgChk(altiTelem, sizeof(altiTelem));
     sprintf(temp, "%i", chk);
@@ -976,7 +995,7 @@ void recordAltitude()
           apogeeReadyToFire = true;
           apogeeStartTime = millis();
           drogueFiredAltitude = currAltitude;
-          apogeeAltitude =lastAltitude;
+          apogeeAltitude = lastAltitude;
         }
       }
       else
@@ -986,7 +1005,6 @@ void recordAltitude()
       }
       if (apogeeReadyToFire && !allApogeeFiredComplete)
       {
-
         //fire all drogues if delay ok
         for (int ap = 0; ap < 4; ap++ ) {
           if (!outputHasFired[ap] && ((millis() - apogeeStartTime) >= OutputDelay[ap]) && OutputType[ap] == 1) {
@@ -1106,7 +1124,7 @@ void recordAltitude()
 #endif
         logger.writeFlightList();
       }
-      //if ((MainFiredComplete && (currAltitude < 10)) || (MainFiredComplete && (millis() - mainStartTime) > recordingTimeOut))
+
       if ((allMainFiredComplete && (currAltitude < 10) && allLandingFiredComplete) || (allMainFiredComplete && (millis() - mainStartTime) > recordingTimeOut))
       {
 #ifdef SERIAL_DEBUG
@@ -1270,6 +1288,7 @@ void MainMenu()
       telemetry in on else turn it off
    m  followed by a number turn main loop on/off. if number is 1 then
       main loop in on else turn it off
+   o  requesting test trame
 */
 void interpretCommandBuffer(char *commandbuffer) {
   SerialCom.println((char*)commandbuffer);
@@ -1287,7 +1306,7 @@ void interpretCommandBuffer(char *commandbuffer) {
   else if (commandbuffer[0] == 'r')
   {
     char temp[3];
-       
+
     temp[0] = commandbuffer[1];
     if (commandbuffer[2] != '\0')
     {
@@ -1323,7 +1342,7 @@ void interpretCommandBuffer(char *commandbuffer) {
     char temp[9] = "";
     SerialCom.print(F("$start;\n"));
     strcat(flightData, "nbrOfFlight,");
-    sprintf(temp, "%i,", logger.getLastFlightNbr()+1 );
+    sprintf(temp, "%i,", logger.getLastFlightNbr() + 1 );
     strcat(flightData, temp);
     unsigned int chk = msgChk(flightData, sizeof(flightData));
     sprintf(temp, "%i", chk);
@@ -1332,7 +1351,7 @@ void interpretCommandBuffer(char *commandbuffer) {
     SerialCom.print("$");
     SerialCom.print(flightData);
     SerialCom.print(F("$end;\n"));
-    
+
   }
   //list all flights
   else if (commandbuffer[0] == 'l')
@@ -1499,6 +1518,13 @@ void interpretCommandBuffer(char *commandbuffer) {
   {
     logger.eraseLastFlight();
   }
+  // send test tram
+  else if (commandbuffer[0] == 'o')
+  { 
+    SerialCom.print(F("$start;\n"));
+    sendTestTram();
+    SerialCom.print(F("$end;\n"));
+  }
   // empty command
   else if (commandbuffer[0] == ' ')
   {
@@ -1516,8 +1542,7 @@ void interpretCommandBuffer(char *commandbuffer) {
 
 */
 void resetFlight() {
-
-
+  recordingTimeOut = config.recordingTimeout * 1000;
   allApogeeFiredComplete  = false;
   allMainFiredComplete = false;
   allTimerFiredComplete = false;
@@ -1531,6 +1556,7 @@ void resetFlight() {
   Output4Fired = false;
 #endif
 
+  apogeeAltitude = 0;
   logger.readFlightList();
   long lastFlightNbr = logger.getLastFlightNbr();
   if (lastFlightNbr < 0)
@@ -1554,23 +1580,23 @@ void resetFlight() {
 */
 void checkBatVoltage(float minVolt) {
 #ifdef ALTIMULTISTM32
-if ((millis() - lastBattWarning) > 10000) {
+  if ((millis() - lastBattWarning) > 10000) {
     lastBattWarning = millis();
-  pinMode(PB1, INPUT_ANALOG);
-  int batVoltage = analogRead(PB1);
+    pinMode(PB1, INPUT_ANALOG);
+    int batVoltage = analogRead(PB1);
 
-  float bat = VOLT_DIVIDER * ((float)(batVoltage * 3300) / (float)4096000);
+    float bat = VOLT_DIVIDER * ((float)(batVoltage * 3300) / (float)4096000);
 
-  if (bat < minVolt) {
-    for (int i = 0; i < 10; i++)
-    {
-      tone(pinSpeaker, 1600, 1000);
-      delay(50);
-      noTone(pinSpeaker);
+    if (bat < minVolt) {
+      for (int i = 0; i < 10; i++)
+      {
+        tone(pinSpeaker, 1600, 1000);
+        delay(50);
+        noTone(pinSpeaker);
+      }
+      delay(1000);
     }
-    delay(1000);
   }
-}
 #endif
 
 }
@@ -1583,4 +1609,24 @@ void fireOutput(int pin, boolean fire) {
     digitalWrite(pin, HIGH);
   else
     digitalWrite(pin, LOW);
+}
+
+/*
+    Test tram
+*/
+void sendTestTram() {
+
+  char altiTest[100] = "";
+  char temp[10] = "";
+
+  strcat(altiTest, "testTrame," );
+  strcat(altiTest, "Bear altimeters are the best!!!!,");
+  unsigned int chk;
+  chk = msgChk(altiTest, sizeof(altiTest));
+  sprintf(temp, "%i", chk);
+  strcat(altiTest, temp);
+  strcat(altiTest, ";\n");
+  SerialCom.print("$");
+  SerialCom.print(altiTest);
+
 }
