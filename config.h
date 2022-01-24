@@ -25,7 +25,10 @@
 //#define ALTIMULTIV2
 
 // if you have the STM32 shield then define ALTIMULTISTM32
-#define ALTIMULTISTM32
+//#define ALTIMULTISTM32
+
+// if you have the ESP32 board then define ALTIMULTIESP32
+#define ALTIMULTIESP32
 
 // choose the pressure sensor that you are using
 // for most board the pressure sensor is either BMP085 or BMP180 
@@ -50,7 +53,7 @@
 //////////// do not change anything after unless you know what you are doing /////////////////////
 
 #define MAJOR_VERSION 1
-#define MINOR_VERSION 25
+#define MINOR_VERSION 26
 #define BUILD 1
 #define CONFIG_START 32
 
@@ -58,35 +61,49 @@
 #include <itoa.h>
 #endif
 
-#ifdef ALTIMULTISTM32
+/*#ifdef ALTIMULTISTM32
   #ifdef BMP085_180
   #undef BMP085_180
   #define BMP085_180_STM32
   #endif
 #endif
 
+#ifdef ALTIMULTIESP32
+  #ifdef BMP085_180
+  #undef BMP085_180
+  #define BMP085_180_ESP32
+  #endif
+#endif*/
+
 #ifdef ALTIMULTI 
 #define BOARD_FIRMWARE "AltiMulti"
 #define NBR_PYRO_OUT3
+#define SerialCom Serial
 #endif
 
 #ifdef ALTIMULTIV2
 #define BOARD_FIRMWARE "AltiMultiV2"
 #define NBR_PYRO_OUT3
+#define SerialCom Serial
 #endif
 
 #ifdef ALTIMULTISTM32
 #define BOARD_FIRMWARE "AltiMultiSTM32"
 #define NBR_PYRO_OUT4
-#endif
-
-
-#ifdef ALTIMULTISTM32
 #define SerialCom Serial1
-//#define SerialCom Serial3
-#else
-#define SerialCom Serial
 #endif
+
+#ifdef ALTIMULTIESP32
+#define BOARD_FIRMWARE "AltiMultiESP32"
+#define NBR_PYRO_OUT3
+#include "BluetoothSerial.h"
+extern BluetoothSerial SerialBT;
+#define SerialCom SerialBT
+//#define SerialCom Serial
+#define BUFFER_LENGTH I2C_BUFFER_LENGTH
+#endif
+
+
 
 
 
@@ -129,10 +146,8 @@ struct ConfigStruct {
   int altimeterResolution; // BMP sensor resolution
   int eepromSize;
   int noContinuity;
-  //#ifdef ALTIMULTISTM32
   int outPut4;
   int outPut4Delay;
-  //#endif
   int liftOffAltitude; //Lift off Altitude in meters
   int batteryType; // 0= Unknown, 1= "2S (7.4 Volts)", 2 = "9 Volts",3 = "3S (11.1 Volts)
   int recordingTimeout; // in Seconds
@@ -144,6 +159,7 @@ extern void defaultConfig();
 extern bool readAltiConfig();
 extern int getOutPin(int );
 extern bool writeAltiConfig( char * );
+extern bool writeAltiConfigV2( char * );
 extern void printAltiConfig();
 extern void writeConfigStruc();
 extern bool CheckValideBaudRate(long);

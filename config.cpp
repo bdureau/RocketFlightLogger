@@ -10,6 +10,9 @@ const int pyroOut1 = 9; //12;
 #ifdef ALTIMULTI
 const int pyroOut1 = 9;
 #endif
+#ifdef ALTIMULTIESP32
+const int pyroOut1 = 2;//15;//34;
+#endif
 //pyro out 2
 #ifdef ALTIMULTIV2
 const int pyroOut2 = 12; //9; 
@@ -20,11 +23,21 @@ const int pyroOut2 = 13;
 #ifdef ALTIMULTISTM32
 const int pyroOut2 = PA3;
 #endif
+#ifdef ALTIMULTIESP32
+const int pyroOut2 = 18;
+#endif
 //pyro out 3
 #ifdef ALTIMULTISTM32
 const int pyroOut3 = PA5; //17;
-#else
+#endif
+#ifdef ALTIMULTI
 const int pyroOut3 = 17;
+#endif
+#ifdef ALTIMULTIV2
+const int pyroOut3 = 17;
+#endif
+#ifdef ALTIMULTIESP32
+const int pyroOut3 = 19;
 #endif
 //pyro out 4
 #ifdef ALTIMULTISTM32
@@ -63,16 +76,23 @@ void defaultConfig()
   config.outPut4Delay = 0;
   config.liftOffAltitude = 10;
   config.batteryType = 0;
+  config.recordingTimeout = 120;
   config.cksum = CheckSumConf(config);
 }
+
 bool readAltiConfig() {
   //set the config to default values so that if any have not been configured we can use the default ones
   defaultConfig();
   int i;
+  #ifdef ALTIMULTIESP32
+  EEPROM.begin(512);
+  #endif
   for ( i = 0; i < sizeof(config); i++ ) {
     *((char*)&config + i) = EEPROM.read(CONFIG_START + i);
   }
-
+  #ifdef ALTIMULTIESP32
+  EEPROM.end();
+  #endif
   if ( config.cksum != CheckSumConf(config) ) {
     return false;
   }
@@ -86,7 +106,7 @@ bool readAltiConfig() {
   write the config received by the console
 
 */
-bool writeAltiConfig( char *p ) {
+/*bool writeAltiConfig( char *p ) {
 
   char *str;
   int i = 0;
@@ -189,9 +209,12 @@ bool writeAltiConfig( char *p ) {
       case 23:
         config.batteryType = atoi(str);
         strcat(msg, str);
-        //strcat(msg, "\0");
         break;
-      case 24:
+      case 24:  
+        config.recordingTimeout = atoi(str);
+         strcat(msg, str);
+        break;
+      case 25:
         //our checksum
         strChk= atoi(str);
         break;
@@ -200,7 +223,7 @@ bool writeAltiConfig( char *p ) {
 
   }
   //we have a partial config
-  if (i<23)
+  if (i<24)
     return false;
 
   if(msgChk(msg, sizeof(msg)) != strChk)
@@ -209,6 +232,121 @@ bool writeAltiConfig( char *p ) {
   config.cksum = CheckSumConf(config);
 
   writeConfigStruc();
+  return true;
+}*/
+
+bool writeAltiConfigV2( char *p ) {
+
+  char *str;
+  int i = 0;
+  int command =0;
+  long commandVal =0;
+  int strChk = 0;
+  char msg[100] = "";
+
+  while ((str = strtok_r(p, ",", &p)) != NULL) // delimiter is the comma
+  {
+    //SerialCom.println(str);
+    if (i == 1) {
+      command = atoi(str);
+      strcat(msg, str);
+    }
+    if (i == 2) {
+      commandVal =  atol(str);
+      strcat(msg, str);
+    }
+    if (i == 3) {
+      strChk  =  atoi(str);  
+    }
+    i++;
+
+  }
+    //we have a partial config
+  if (i < 4)
+    return false;
+  //checksum is ivalid ? 
+  if (msgChk(msg, sizeof(msg)) != strChk)
+    return false;  
+    
+  switch (command)
+    {
+      case 1:
+        config.unit = (int) commandVal;
+        break;
+      case 2:
+        config.beepingMode = (int) commandVal;
+        break;
+      case 3:
+        config.outPut1 = (int) commandVal;
+        break;
+      case 4:
+        config.outPut2 = (int) commandVal;
+        break;
+      case 5:
+        config.outPut3 = (int) commandVal;
+        break;
+      case 6:
+        config.mainAltitude = (int) commandVal;
+        break;
+      case 7:
+        config.superSonicYesNo = (int)commandVal;
+        break;
+      case 8:
+        config.outPut1Delay = (int)commandVal;
+        break;
+      case 9:
+        config.outPut2Delay = (int)commandVal;
+        break;
+      case 10:
+        config.outPut3Delay = (int)commandVal;
+        break;
+      case 11:
+        config.beepingFrequency = (int)commandVal;
+        break;
+      case 12:
+        config.nbrOfMeasuresForApogee =(int) commandVal;
+        break;
+      case 13:
+        config.endRecordAltitude = (int)commandVal;
+        break;
+      case 14:
+        config.recordTemperature = (int)commandVal;
+        break;
+      case 15:
+        config.superSonicDelay =(int)commandVal;
+        break;
+      case 16:
+        config.connectionSpeed = commandVal;
+        break;
+      case 17:
+        config.altimeterResolution = (int)commandVal;
+        break;
+      case 18:
+        config.eepromSize = (int)commandVal;
+        break;
+      case 19:
+        config.noContinuity = (int)commandVal;
+        break;
+      case 20:
+        config.outPut4 = (int)commandVal;
+        break;
+      case 21:
+        config.outPut4Delay = (int)commandVal;
+        break;
+      case 22:
+        config.liftOffAltitude = (int)commandVal;
+        break;
+      case 23:
+        config.batteryType = (int)commandVal;
+        break;
+      case 24:
+        config.recordingTimeout = (int)commandVal;
+        break;
+    }
+
+  // add checksum
+  config.cksum = CheckSumConf(config);
+
   return true;
 }
 /*
@@ -219,9 +357,16 @@ bool writeAltiConfig( char *p ) {
 void writeConfigStruc()
 {
   int i;
+  #ifdef ALTIMULTIESP32
+  EEPROM.begin(512);
+  #endif
   for ( i = 0; i < sizeof(config); i++ ) {
     EEPROM.write(CONFIG_START + i, *((char*)&config + i));
   }
+  #ifdef ALTIMULTIESP32
+  EEPROM.commit();
+  EEPROM.end();
+  #endif
 }
 /*
 
@@ -309,6 +454,9 @@ void printAltiConfig()
   strcat(altiConfig, temp);
   //Battery type
   sprintf(temp, "%i,", config.batteryType);
+  strcat(altiConfig, temp);
+  // recording timeout
+  sprintf(temp, "%i,", config.recordingTimeout);
   strcat(altiConfig, temp);
   unsigned int chk = 0;
   chk = msgChk( altiConfig, sizeof(altiConfig) );

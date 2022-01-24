@@ -1,6 +1,6 @@
 /*
-  Rocket Flight Logger ver 1.25
-  Copyright Boris du Reau 2012-2021
+  Rocket Flight Logger ver 1.26
+  Copyright Boris du Reau 2012-2022
 
   The following is a datalogger for logging rocket flight.
   So far it can log the rocket altitude during the flight.
@@ -9,21 +9,22 @@
 
   This is using a BMP085 or BMP180 presure sensor and an Atmega 328 or an STM32
   The compatible boards are Altimulti, AltimultiV2 and AltiMultiSTM32. To complile the
-  firmware to the various board go to the config.h file and select one of the 
+  firmware to the various board go to the config.h file and select one of the
   following compilation directive
   #define ALTIMULTI
   #define ALTIMULTIV2
   #define ALTIMULTISTM32
+  #define ALTIMULTIESP32
 
   Then on your Arduino environment select the appropriate boards:
   Arduino Uno => AltiMulti and AltiMultiV2
   Generic STM32F103C series => AltimultiSTM32
-  
+
   The following record the flight (altitude, temperature, pressure) in an EEPROM.
-  Note that internally the altimeter is working is metric, for conveniance the beeping 
+  Note that internally the altimeter is working is metric, for conveniance the beeping
   altitude can be changed to feet.
   You can query the board using AT commands or you can use the Android front end.
-  Note that if you do not want to compile the firmware and/or the Android front end you 
+  Note that if you do not want to compile the firmware and/or the Android front end you
   can get everything on the Android play store, just search for BearConsole
 
 
@@ -109,6 +110,9 @@
   Added recording timeout
   Retreive flights one by one so that it can be cancelled
   Adding telemetry module connection test
+  Major changes on version 1.26
+  Adding ESP32
+  starting using custom libraries
 */
 
 //altimeter configuration lib
@@ -117,7 +121,8 @@
 
 
 #ifdef BMP085_180
-#include <Adafruit_BMP085.h>
+//#include <Adafruit_BMP085.h>
+#include "Bear_BMP085.h"
 #endif
 
 #ifdef BMP280
@@ -126,9 +131,13 @@
 #endif
 
 #ifdef BMP085_180_STM32
-#include <BMP085_stm32.h>
+//#include <BMP085_stm32.h>
+#include "Bear_BMP085.h"
 #endif
 
+#ifdef BMP085_180_ESP32
+#include "Bear_BMP085.h"
+#endif
 
 #include "kalman.h"
 #include "beepfunc.h"
@@ -141,14 +150,19 @@
 //////////////////////////////////////////////////////////////////////
 
 #ifdef BMP085_180
-Adafruit_BMP085 bmp;
+//Adafruit_BMP085 bmp;
+BMP085 bmp;
 #endif
 #ifdef BMP280
 BMP280 bmp;
 #endif
-#ifdef BMP085_180_STM32
+/*#ifdef BMP085_180_STM32
 BMP085 bmp;
 #endif
+
+#ifdef BMP085_180_ESP32
+BMP085 bmp;
+#endif*/
 
 //EEProm address
 logger_I2C_eeprom logger(0x50) ;
@@ -181,7 +195,9 @@ boolean FastReading = false;
 //nbr of measures to do so that we are sure that apogee has been reached
 unsigned long measures = 5;
 unsigned long mainDeployAltitude;
-
+#ifdef ALTIMULTIESP32
+BluetoothSerial SerialBT;
+#endif
 // pin used by the jumpers
 #ifdef ALTIMULTISTM32
 const int pinAltitude1 = PB3;
@@ -195,7 +211,10 @@ const int pinAltitude2 = 7;
 const int pinAltitude1 = 8;
 const int pinAltitude2 = 7;
 #endif
-
+#ifdef ALTIMULTIESP32
+const int pinAltitude1 = 4;
+const int pinAltitude2 = 0;
+#endif
 //note that the STM32 board has 4 pyro output
 #ifdef ALTIMULTISTM32
 //by default apogee pin
@@ -227,6 +246,14 @@ const int pinChannel2Continuity = 10;//11;
 const int pinChannel3Continuity = 16;
 #endif
 
+#ifdef ALTIMULTIESP32
+//by default apogee pin
+const int pinChannel1Continuity = 5;
+// by default continuity for the main
+const int pinChannel2Continuity = 17;
+// third output
+const int pinChannel3Continuity = 23;
+#endif
 
 float FEET_IN_METER = 1;
 
@@ -255,6 +282,7 @@ long lastBattWarning = 0;
 
 void MainMenu();
 
+
 #ifdef BMP085_180
 /*
    ReadAltitude()
@@ -266,12 +294,7 @@ double ReadAltitude()
   return KalmanCalc(bmp.readAltitude());
 }
 #endif
-#ifdef BMP085_180_STM32
-double ReadAltitude()
-{
-  return KalmanCalc(bmp.readAltitude());
-}
-#endif
+
 #ifdef BMP280
 /*
 
@@ -408,8 +431,12 @@ void setup()
   //You can change the baud rate here
   //and change it to 57600, 115200 etc..
   //Serial.begin(BAUD_RATE);
+#ifdef ALTIMULTIESP32
+  SerialCom.begin("ESP32RocketFlightLogger");
+#else
   SerialCom.begin(config.connectionSpeed);
-
+#endif
+  SerialCom.println("Start");
 
   //  pinMode(A0, INPUT);
 #ifdef ALTIMULTI
@@ -430,6 +457,10 @@ void setup()
 #ifdef BMP085_180
   // Note that BMP180 is compatible with the BMP085 library
   // Low res should work better at high speed
+  bmp.begin( config.altimeterResolution);
+#endif
+
+#ifdef BMP085_180_ESP32
   bmp.begin( config.altimeterResolution);
 #endif
 #ifdef BMP085_180_STM32
@@ -480,11 +511,12 @@ void setup()
   else
     noContinuity = false;
 
+  SerialCom.print(F("before beep\n"));
   //initialisation give the version of the altimeter
   //One long beep per major number and One short beep per minor revision
   //For example version 1.2 would be one long beep and 2 short beep
   beepAltiVersion(MAJOR_VERSION, MINOR_VERSION);
-
+  SerialCom.print(F("after beep\n"));
   if (!softConfigValid)
   {
     //initialise the deployement altitude for the main
@@ -513,23 +545,26 @@ void setup()
       mainDeployAltitude = 200;
     }
   }
-
+  SerialCom.print(F("before reading altitude1\n"));
   // let's do some dummy altitude reading
   // to initialise the Kalman filter
   for (int i = 0; i < 50; i++) {
     ReadAltitude();
   }
 
+  SerialCom.print(F("before reading altitude2\n"));
   //let's read the launch site altitude
-  long sum = 0;
+  float sum = 0;
   for (int i = 0; i < 10; i++) {
     sum += ReadAltitude();
     delay(50);
   }
+  SerialCom.print(F("after reading altitude\n"));
   initialAltitude = (sum / 10.0);
   lastAltitude = 0;//initialAltitude;
   liftoffAltitude = config.liftOffAltitude;//20;
 
+  SerialCom.print(F("before reading eeprom\n"));
   int v_ret;
   v_ret = logger.readFlightList();
 #ifdef SERIAL_DEBUG
@@ -551,7 +586,7 @@ void setup()
     currentMemaddress = logger.getFlightStop(lastFlightNbr) + 1;
     currentFileNbr = lastFlightNbr + 1;
   }
-
+  SerialCom.print(F("after  reading eeprom\n"));
   // check if eeprom is full
   canRecord = logger.CanRecord();
   if (!canRecord)
@@ -1267,114 +1302,37 @@ void MainMenu()
    this is used by the Android console
 
    Commands are as folow:
-   e  erase all saved flights
-   r  followed by a number which is the flight number.
-      This will retrieve all data for the specified flight
-   w  Start or stop recording
-   n  Return the number of recorded flights in the EEprom
-   l  list all flights
-   c  toggle continuity on and off
    a  get all flight data
    b  get altimeter config
-   s  write altimeter config
+   c  toggle continuity on and off
    d  reset alti config
-   t  reset alti config (why?)
+   e  erase all saved flights
    f  FastReading on
    g  FastReading off
    h  hello. Does not do much
    i  unused
    k  folowed by a number turn on or off the selected output
-   y  followed by a number turn telemetry on/off. if number is 1 then
-      telemetry in on else turn it off
+   l  list all flights
    m  followed by a number turn main loop on/off. if number is 1 then
       main loop in on else turn it off
+   n  Return the number of recorded flights in the EEprom
    o  requesting test trame
+   r  followed by a number which is the flight number.
+      This will retrieve all data for the specified flight
+   s  write altimeter config
+   t  reset alti config (why?)
+   w  Start or stop recording
+   x  delete last curve
+   y  followed by a number turn telemetry on/off. if number is 1 then
+      telemetry in on else turn it off
+   z  send gps raw data
+
 */
 void interpretCommandBuffer(char *commandbuffer) {
-  SerialCom.println((char*)commandbuffer);
-  //this will erase all flight
-  if (commandbuffer[0] == 'e')
-  {
-    SerialCom.println(F("Erase\n"));
-    //i2c_eeprom_erase_fileList();
-    logger.clearFlightList();
-    logger.writeFlightList();
-    currentFileNbr = 0;
-    currentMemaddress = 201;
-  }
-  //this will read one flight
-  else if (commandbuffer[0] == 'r')
-  {
-    char temp[3];
+  //SerialCom.println((char*)commandbuffer);
 
-    temp[0] = commandbuffer[1];
-    if (commandbuffer[2] != '\0')
-    {
-      temp[1] = commandbuffer[2];
-      temp[2] = '\0';
-    }
-    else
-      temp[1] = '\0';
-
-    if (atol(temp) > -1)
-    {
-      SerialCom.print(F("$start;\n"));
-      logger.printFlightData(atoi(temp));
-      SerialCom.print(F("$end;\n"));
-    }
-    else
-      SerialCom.println(F("not a valid flight"));
-  }
-  // Recording
-  else if (commandbuffer[0] == 'w')
-  {
-    SerialCom.println(F("Recording \n"));
-    recordAltitude();
-  }
-  //Number of flight
-  else if (commandbuffer[0] == 'n')
-  {
-    //SerialCom.println(F("Number of flight \n"));
-    //SerialCom.print(F("n;"));
-    //Serial.println(getFlightList());
-    //logger.printFlightList();
-    char flightData[30] = "";
-    char temp[9] = "";
-    SerialCom.print(F("$start;\n"));
-    strcat(flightData, "nbrOfFlight,");
-    sprintf(temp, "%i,", logger.getLastFlightNbr() + 1 );
-    strcat(flightData, temp);
-    unsigned int chk = msgChk(flightData, sizeof(flightData));
-    sprintf(temp, "%i", chk);
-    strcat(flightData, temp);
-    strcat(flightData, ";\n");
-    SerialCom.print("$");
-    SerialCom.print(flightData);
-    SerialCom.print(F("$end;\n"));
-
-  }
-  //list all flights
-  else if (commandbuffer[0] == 'l')
-  {
-    SerialCom.println(F("Flight List: \n"));
-    logger.printFlightList();
-  }
-  //toggle continuity on and off
-  else if (commandbuffer[0] == 'c')
-  {
-    if (noContinuity == false)
-    {
-      noContinuity = true;
-      SerialCom.println(F("Continuity off \n"));
-    }
-    else
-    {
-      noContinuity = false;
-      SerialCom.println(F("Continuity on \n"));
-    }
-  }
   //get all flight data
-  else if (commandbuffer[0] == 'a')
+  if (commandbuffer[0] == 'a')
   {
     SerialCom.print(F("$start;\n"));
     //getFlightList()
@@ -1396,19 +1354,18 @@ void interpretCommandBuffer(char *commandbuffer) {
 
     SerialCom.print(F("$end;\n"));
   }
-  //write altimeter config
-  else if (commandbuffer[0] == 's')
+  //toggle continuity on and off
+  else if (commandbuffer[0] == 'c')
   {
-    if (writeAltiConfig(commandbuffer)) {
-
-      SerialCom.print(F("$OK;\n"));
-      readAltiConfig();
-      initAlti();
+    if (noContinuity == false)
+    {
+      noContinuity = true;
+      SerialCom.println(F("Continuity off \n"));
     }
-    else {
-      SerialCom.print(F("$KO;\n"));
-      //readAltiConfig();
-      //initAlti();
+    else
+    {
+      noContinuity = false;
+      SerialCom.println(F("Continuity on \n"));
     }
   }
   //reset alti config this is equal to t why do I have 2 !!!!
@@ -1418,14 +1375,15 @@ void interpretCommandBuffer(char *commandbuffer) {
     writeConfigStruc();
     initAlti();
   }
-  //reset config and set it to default
-  else if (commandbuffer[0] == 't')
+  //this will erase all flight
+  else if (commandbuffer[0] == 'e')
   {
-    //reset config
-    defaultConfig();
-    writeConfigStruc();
-    initAlti();
-    SerialCom.print(F("config reseted\n"));
+    SerialCom.println(F("Erase\n"));
+    //i2c_eeprom_erase_fileList();
+    logger.clearFlightList();
+    logger.writeFlightList();
+    currentFileNbr = 0;
+    currentMemaddress = 201;
   }
   //FastReading
   else if (commandbuffer[0] == 'f')
@@ -1483,19 +1441,13 @@ void interpretCommandBuffer(char *commandbuffer) {
       }
     }
   }
-  //telemetry on/off
-  else if (commandbuffer[0] == 'y')
+  //list all flights
+  else if (commandbuffer[0] == 'l')
   {
-    if (commandbuffer[1] == '1') {
-      SerialCom.print(F("Telemetry enabled\n"));
-      telemetryEnable = true;
-    }
-    else {
-      SerialCom.print(F("Telemetry disabled\n"));
-      telemetryEnable = false;
-    }
-    SerialCom.print(F("$OK;\n"));
+    SerialCom.println(F("Flight List: \n"));
+    logger.printFlightList();
   }
+
   //mainloop on/off
   else if (commandbuffer[0] == 'm')
   {
@@ -1513,18 +1465,121 @@ void interpretCommandBuffer(char *commandbuffer) {
     }
     SerialCom.print(F("$OK;\n"));
   }
+  //Number of flight
+  else if (commandbuffer[0] == 'n')
+  {
+    char flightData[30] = "";
+    char temp[9] = "";
+    SerialCom.print(F("$start;\n"));
+    strcat(flightData, "nbrOfFlight,");
+    sprintf(temp, "%i,", logger.getLastFlightNbr() + 1 );
+    strcat(flightData, temp);
+    unsigned int chk = msgChk(flightData, sizeof(flightData));
+    sprintf(temp, "%i", chk);
+    strcat(flightData, temp);
+    strcat(flightData, ";\n");
+    SerialCom.print("$");
+    SerialCom.print(flightData);
+    SerialCom.print(F("$end;\n"));
+  }
+  // send test tram
+  else if (commandbuffer[0] == 'o')
+  {
+    SerialCom.print(F("$start;\n"));
+    sendTestTram();
+    SerialCom.print(F("$end;\n"));
+  }
+    //altimeter config param
+  //write  config
+  else if (commandbuffer[0] == 'p')
+  {
+    if (writeAltiConfigV2(commandbuffer)) {
+      SerialCom.print(F("$OK;\n"));
+    }
+    else
+      SerialCom.print(F("$KO;\n"));
+  }
+  else if (commandbuffer[0] == 'q')
+  {
+    writeConfigStruc();
+    readAltiConfig();
+    initAlti();
+    SerialCom.print(F("$OK;\n"));
+  }
+  //this will read one flight
+  else if (commandbuffer[0] == 'r')
+  {
+    char temp[3];
+
+    temp[0] = commandbuffer[1];
+    if (commandbuffer[2] != '\0')
+    {
+      temp[1] = commandbuffer[2];
+      temp[2] = '\0';
+    }
+    else
+      temp[1] = '\0';
+
+    if (atol(temp) > -1)
+    {
+      SerialCom.print(F("$start;\n"));
+      logger.printFlightData(atoi(temp));
+      SerialCom.print(F("$end;\n"));
+    }
+    else
+      SerialCom.println(F("not a valid flight"));
+  }
+  //write altimeter config
+  else if (commandbuffer[0] == 's')
+  {
+    /*if (writeAltiConfig(commandbuffer)) {
+
+      SerialCom.print(F("$OK;\n"));
+      readAltiConfig();
+      initAlti();
+    }
+    else {
+      SerialCom.print(F("$KO;\n"));
+      //readAltiConfig();
+      //initAlti();
+    }*/
+  }
+  //reset config and set it to default
+  else if (commandbuffer[0] == 't')
+  {
+    //reset config
+    defaultConfig();
+    writeConfigStruc();
+    initAlti();
+    SerialCom.print(F("config reseted\n"));
+  }
+  // Recording
+  else if (commandbuffer[0] == 'w')
+  {
+    SerialCom.println(F("Recording \n"));
+    recordAltitude();
+  }
   //delete last curve
   else if (commandbuffer[0] == 'x')
   {
     logger.eraseLastFlight();
   }
-  // send test tram
-  else if (commandbuffer[0] == 'o')
-  { 
-    SerialCom.print(F("$start;\n"));
-    sendTestTram();
-    SerialCom.print(F("$end;\n"));
+
+  //telemetry on/off
+  else if (commandbuffer[0] == 'y')
+  {
+    if (commandbuffer[1] == '1') {
+      SerialCom.print(F("Telemetry enabled\n"));
+      telemetryEnable = true;
+    }
+    else {
+      SerialCom.print(F("Telemetry disabled\n"));
+      telemetryEnable = false;
+    }
+    SerialCom.print(F("$OK;\n"));
   }
+
+
   // empty command
   else if (commandbuffer[0] == ' ')
   {
@@ -1579,7 +1634,7 @@ void resetFlight() {
    damaged by over discharging
 */
 void checkBatVoltage(float minVolt) {
-#ifdef ALTIMULTISTM32
+#ifdef ALTIMULTISTM32 
   if ((millis() - lastBattWarning) > 10000) {
     lastBattWarning = millis();
     pinMode(PB1, INPUT_ANALOG);
@@ -1598,6 +1653,7 @@ void checkBatVoltage(float minVolt) {
     }
   }
 #endif
+
 
 }
 /*
