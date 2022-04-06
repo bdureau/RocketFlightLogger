@@ -45,8 +45,10 @@ The ATMega 328 version has 3 pyro output.
 <img src="/pictures/altimultiV2.png" width="49%">
 
 As of version 1.16 you can use an STM32 board which has 4 pyro output and a lot of memory. Plan is to use the additionnal serial ports to have the ability to use GPS modules combined with telemetry.
+
 <img src="/pictures/AltiMultiSTM32.jpg" width="49%">
 
 As of version 1.26 you can use ESP32 board. Plan is be able to build a more complex altimeter in the futur without the need to have an external bluetooth module
+
 <img src="/pictures/esp32-altimulti.jpg" width="49%">
 <img src="/pictures/esp32-altimulti-part2.jpg" width="49%">
