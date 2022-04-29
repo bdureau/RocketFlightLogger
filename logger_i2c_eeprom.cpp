@@ -180,6 +180,9 @@ void logger_I2C_eeprom::setFlightTemperatureData( long temperature)
 {
   _FlightData.temperature = temperature;
 }
+void logger_I2C_eeprom::setFlightPressureData( long pressure) {
+  _FlightData.pressure = pressure;
+}
 long logger_I2C_eeprom::getFlightStart(int flightNbr)
 {
   return  _FlightConfig[flightNbr].flight_start;
@@ -230,14 +233,16 @@ void logger_I2C_eeprom::printFlightData(int flightNbr)
       strcat(flightData, temp);
       sprintf(temp, "%i,", _FlightData.temperature );
       strcat(flightData, temp);
+      sprintf(temp, "%i,", _FlightData.pressure );
+      strcat(flightData, temp);
       unsigned int chk = msgChk(flightData, sizeof(flightData));
       sprintf(temp, "%i", chk);
       strcat(flightData, temp);
       strcat(flightData, ";\n");
       SerialCom.print("$");
       SerialCom.print(flightData);
+      delay(10);
     }
-
   }
 }
 /*

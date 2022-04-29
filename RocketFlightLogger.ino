@@ -119,24 +119,13 @@
 #include "config.h"
 #include <Wire.h> //I2C library
 
-
 #ifdef BMP085_180
-//#include <Adafruit_BMP085.h>
 #include "Bear_BMP085.h"
 #endif
 
 #ifdef BMP280
 #include <BMP280.h>
 #define P0 1013.25
-#endif
-
-#ifdef BMP085_180_STM32
-//#include <BMP085_stm32.h>
-#include "Bear_BMP085.h"
-#endif
-
-#ifdef BMP085_180_ESP32
-#include "Bear_BMP085.h"
 #endif
 
 #include "kalman.h"
@@ -289,9 +278,10 @@ void MainMenu();
    Read Altitude function for a BMP85 or 180 Bosch sensor
 
 */
-double ReadAltitude()
+float ReadAltitude()
 {
   return KalmanCalc(bmp.readAltitude());
+  //return bmp.readAltitude();
 }
 #endif
 
@@ -432,7 +422,8 @@ void setup()
   //and change it to 57600, 115200 etc..
   //Serial.begin(BAUD_RATE);
 #ifdef ALTIMULTIESP32
-  SerialCom.begin("ESP32RocketFlightLogger");
+  SerialCom.begin("ESP32Rocket");
+  //SerialCom.begin(38400);
 #else
   SerialCom.begin(config.connectionSpeed);
 #endif
@@ -457,17 +448,19 @@ void setup()
 #ifdef BMP085_180
   // Note that BMP180 is compatible with the BMP085 library
   // Low res should work better at high speed
+   SerialCom.print(F("sensor\n"));
+
   bmp.begin( config.altimeterResolution);
 #endif
 
-#ifdef BMP085_180_ESP32
+/*#ifdef BMP085_180_ESP32
   bmp.begin( config.altimeterResolution);
-#endif
-#ifdef BMP085_180_STM32
+#endif*/
+/*#ifdef BMP085_180_STM32
   // Note that BMP180 is compatible with the BMP085 library however some modifications have been done for the stm32
   // Low res should work better at high speed
   bmp.begin( config.altimeterResolution);
-#endif
+#endif*/
 #ifdef BMP280
   bmp.begin();
   bmp.setOversampling(config.altimeterResolution)
@@ -740,7 +733,15 @@ void SendTelemetry(long sampleTime, int freq) {
     strcat(altiTelem, temp);
     strcat(altiTelem, ",");
 #else
+  #ifdef ALTIMULTIESP32
+    int batVoltage = analogRead(4);
+    float bat = VOLT_DIVIDER * ((float)(batVoltage * 3300) / (float)4096000);
+    dtostrf(bat, 4, 2, temp);
+    strcat(altiTelem, temp);
+    strcat(altiTelem, ",");
+  #else
     strcat(altiTelem, "-1,");
+  #endif  
 #endif
     // temperature
     float temperature;
@@ -1002,6 +1003,7 @@ void recordAltitude()
         logger.setFlightTimeData( diffTime);
         logger.setFlightAltitudeData(currAltitude);
         logger.setFlightTemperatureData((long) bmp.readTemperature());
+        logger.setFlightPressureData((long) bmp.readPressure());
 
         if ( (currentMemaddress + logger.getSizeOfFlightData())  > endAddress) {
           //flight is full let's save it
@@ -1654,6 +1656,28 @@ void checkBatVoltage(float minVolt) {
   }
 #endif
 
+#ifdef ALTIMULTIESP32 
+  if ((millis() - lastBattWarning) > 10000) {
+    lastBattWarning = millis();
+   // pinMode(4, INPUT_ANALOG);
+    int batVoltage = analogRead(4);
+
+    float bat = VOLT_DIVIDER * ((float)(batVoltage * 3300) / (float)4096000);
+    
+
+    if (bat < minVolt) {
+      for (int i = 0; i < 10; i++)
+      {
+/*        tone(pinSpeaker, 1600, 1000);
+       
+        noTone(pinSpeaker);
+         delay(50);
+        */
+      }
+      delay(1000);
+    }
+  }
+#endif
 
 }
 /*

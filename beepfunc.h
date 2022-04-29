@@ -2,6 +2,9 @@
 #define _BEEPFUNC_H
 #include "config.h"
 #include "Arduino.h"
+#ifdef ALTIMULTIESP32
+#include <ESP32Tone.h>
+#endif
 extern boolean noContinuity;
 //Our drogue has been ejected i.e: apogee has been detected
 extern boolean allApogeeFiredComplete ;

@@ -1,33 +1,37 @@
-/*************************************************** 
+/***************************************************
   This is a library for the BMP085 Barometric Pressure & Temp Sensor
 
-  Designed specifically to work with the Adafruit BMP085 Breakout 
+  Designed specifically to work with the Adafruit BMP085 Breakout
   ----> https://www.adafruit.com/products/391
 
-  These displays use I2C to communicate, 2 pins are required to  
+  These displays use I2C to communicate, 2 pins are required to
   interface
-  Adafruit invests time and resources providing this open source code, 
-  please support Adafruit and open-source hardware by purchasing 
+  Adafruit invests time and resources providing this open source code,
+  please support Adafruit and open-source hardware by purchasing
   products from Adafruit!
 
-  Written by Limor Fried/Ladyada for Adafruit Industries.  
+  Written by Limor Fried/Ladyada for Adafruit Industries.
   BSD license, all text above must be included in any redistribution
  ****************************************************/
 
 #include "Bear_BMP085.h"
 
-
+//#define BMP085_DEBUG 1
 BMP085::BMP085() {
 }
 
 
 boolean BMP085::begin(uint8_t mode) {
-  if (mode > BMP085_ULTRAHIGHRES) 
+  if (mode > BMP085_ULTRAHIGHRES)
     mode = BMP085_ULTRAHIGHRES;
   oversampling = mode;
   Wire.begin();
 
-  if (read8(0xD0) != 0x55) return false;
+  if (read8(0xD0) != 0x55) 
+  {
+    initSuccess =false;
+    return false;
+  }
 
   /* read calibration data */
   ac1 = read16(BMP085_CAL_AC1);
@@ -59,12 +63,12 @@ boolean BMP085::begin(uint8_t mode) {
   Serial.print("md = "); Serial.println(md, DEC);
 #endif
 
-return  true;
+  return  true;
 }
 
 uint16_t BMP085::readRawTemperature(void) {
+  if (!initSuccess) return 0;
   write8(BMP085_CONTROL, BMP085_READTEMPCMD);
-  //_delay_ms(5);
   delay(5);
 #if BMP085_DEBUG == 1
   Serial.print("Raw temp: "); Serial.println(read16(BMP085_TEMPDATA));
@@ -73,36 +77,33 @@ uint16_t BMP085::readRawTemperature(void) {
 }
 
 uint32_t BMP085::readRawPressure(void) {
+  if (!initSuccess) return 0;
   uint32_t raw;
 
   write8(BMP085_CONTROL, BMP085_READPRESSURECMD + (oversampling << 6));
 
-  if (oversampling == BMP085_ULTRALOWPOWER) 
-    //_delay_ms(5);
-delay(5);
-  else if (oversampling == BMP085_STANDARD) 
-    //_delay_ms(8);
-delay(5);
-  else if (oversampling == BMP085_HIGHRES) 
-    //_delay_ms(14);
-delay(5);
-  else 
-    //_delay_ms(26);
-delay(5);
+  if (oversampling == BMP085_ULTRALOWPOWER)
+    delay(5);
+  else if (oversampling == BMP085_STANDARD)
+    delay(8);
+  else if (oversampling == BMP085_HIGHRES)
+    delay(14);
+  else
+    delay(26);
 
   raw = read16(BMP085_PRESSUREDATA);
 
   raw <<= 8;
-  raw |= read8(BMP085_PRESSUREDATA+2);
+  raw |= read8(BMP085_PRESSUREDATA + 2);
   raw >>= (8 - oversampling);
 
- /* this pull broke stuff, look at it later?
-  if (oversampling==0) {
-    raw <<= 8;
-    raw |= read8(BMP085_PRESSUREDATA+2);
-    raw >>= (8 - oversampling);
-  }
- */
+  /* this pull broke stuff, look at it later?
+    if (oversampling==0) {
+     raw <<= 8;
+     raw |= read8(BMP085_PRESSUREDATA+2);
+     raw >>= (8 - oversampling);
+    }
+  */
 
 #if BMP085_DEBUG == 1
   Serial.print("Raw pressure: "); Serial.println(raw);
@@ -112,33 +113,34 @@ delay(5);
 
 
 int32_t BMP085::readPressure(void) {
+  if (!initSuccess) return 0;
   int32_t UT, UP, B3, B5, B6, X1, X2, X3, p;
   uint32_t B4, B7;
 
   UT = readRawTemperature();
   UP = readRawPressure();
 
-#if BMP085_DEBUG == 1
-  // use datasheet numbers!
-  UT = 27898;
-  UP = 23843;
-  ac6 = 23153;
-  ac5 = 32757;
-  mc = -8711;
-  md = 2868;
-  b1 = 6190;
-  b2 = 4;
-  ac3 = -14383;
-  ac2 = -72;
-  ac1 = 408;
-  ac4 = 32741;
-  oversampling = 0;
-#endif
+  /*#if BMP085_DEBUG == 1
+    // use datasheet numbers!
+    UT = 27898;
+    UP = 23843;
+    ac6 = 23153;
+    ac5 = 32757;
+    mc = -8711;
+    md = 2868;
+    b1 = 6190;
+    b2 = 4;
+    ac3 = -14383;
+    ac2 = -72;
+    ac1 = 408;
+    ac4 = 32741;
+    oversampling = 0;
+    #endif*/
 
   // do temperature calculations
-  X1=(UT-(int32_t)(ac6))*((int32_t)(ac5))/pow(2,15);
-  X2=((int32_t)mc*pow(2,11))/(X1+(int32_t)md);
-  B5=X1 + X2;
+  X1 = (UT - (int32_t)(ac6)) * ((int32_t)(ac5)) / pow(2, 15);
+  X2 = ((int32_t)mc * pow(2, 11)) / (X1 + (int32_t)md);
+  B5 = X1 + X2;
 
 #if BMP085_DEBUG == 1
   Serial.print("X1 = "); Serial.println(X1);
@@ -148,10 +150,10 @@ int32_t BMP085::readPressure(void) {
 
   // do pressure calcs
   B6 = B5 - 4000;
-  X1 = ((int32_t)b2 * ( (B6 * B6)>>12 )) >> 11;
+  X1 = ((int32_t)b2 * ( (B6 * B6) >> 12 )) >> 11;
   X2 = ((int32_t)ac2 * B6) >> 11;
   X3 = X1 + X2;
-  B3 = ((((int32_t)ac1*4 + X3) << oversampling) + 2) / 4;
+  B3 = ((((int32_t)ac1 * 4 + X3) << oversampling) + 2) / 4;
 
 #if BMP085_DEBUG == 1
   Serial.print("B6 = "); Serial.println(B6);
@@ -188,7 +190,7 @@ int32_t BMP085::readPressure(void) {
   Serial.print("X2 = "); Serial.println(X2);
 #endif
 
-  p = p + ((X1 + X2 + (int32_t)3791)>>4);
+  p = p + ((X1 + X2 + (int32_t)3791) >> 4);
 #if BMP085_DEBUG == 1
   Serial.print("p = "); Serial.println(p);
 #endif
@@ -197,6 +199,7 @@ int32_t BMP085::readPressure(void) {
 
 
 float BMP085::readTemperature(void) {
+  if (!initSuccess) return 0;
   int32_t UT, X1, X2, B5;     // following ds convention
   float temp;
 
@@ -212,21 +215,22 @@ float BMP085::readTemperature(void) {
 #endif
 
   // step 1
-  X1 = (UT - (int32_t)ac6) * ((int32_t)ac5) / pow(2,15);
-  X2 = ((int32_t)mc * pow(2,11)) / (X1+(int32_t)md);
+  X1 = (UT - (int32_t)ac6) * ((int32_t)ac5) / pow(2, 15);
+  X2 = ((int32_t)mc * pow(2, 11)) / (X1 + (int32_t)md);
   B5 = X1 + X2;
-  temp = (B5+8)/pow(2,4);
+  temp = (B5 + 8) / pow(2, 4);
   temp /= 10;
-  
+
   return temp;
 }
 
 float BMP085::readAltitude(float sealevelPressure) {
+  if (!initSuccess) return 0;
   float altitude;
 
   float pressure = readPressure();
 
-  altitude = 44330 * (1.0 - pow(pressure /sealevelPressure,0.1903));
+  altitude = 44330 * (1.0 - pow(pressure / sealevelPressure, 0.1903));
 
   return altitude;
 }
@@ -235,40 +239,42 @@ float BMP085::readAltitude(float sealevelPressure) {
 /*********************************************************************/
 
 uint8_t BMP085::read8(uint8_t a) {
+  if (!initSuccess) return 0;
   uint8_t ret;
 
-  Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device 
+  Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device
 #if (ARDUINO >= 100)
   Wire.write(a); // sends register address to read from
 #else
   Wire.send(a); // sends register address to read from
 #endif
   Wire.endTransmission(); // end transmission
-  
- // Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device 
+
+  // Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device
   Wire.requestFrom(BMP085_I2CADDR, 1);// send data n-bytes read
 #if (ARDUINO >= 100)
   ret = Wire.read(); // receive DATA
 #else
   ret = Wire.receive(); // receive DATA
 #endif
- // Wire.endTransmission(); // end transmission
+  // Wire.endTransmission(); // end transmission
 
   return ret;
 }
 
 uint16_t BMP085::read16(uint8_t a) {
+  if (!initSuccess) return 0;
   uint16_t ret;
 
-  Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device 
+  Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device
 #if (ARDUINO >= 100)
   Wire.write(a); // sends register address to read from
 #else
   Wire.send(a); // sends register address to read from
 #endif
   Wire.endTransmission(true); // end transmission
-  
-  //Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device 
+
+  //Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device
   Wire.requestFrom(BMP085_I2CADDR, 2);// send data n-bytes read
 #if (ARDUINO >= 100)
   ret = Wire.read(); // receive DATA
@@ -285,7 +291,8 @@ uint16_t BMP085::read16(uint8_t a) {
 }
 
 void BMP085::write8(uint8_t a, uint8_t d) {
-  Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device 
+  if (!initSuccess) return ;
+  Wire.beginTransmission(BMP085_I2CADDR); // start transmission to device
 #if (ARDUINO >= 100)
   Wire.write(a); // sends register address to read from
   Wire.write(d);  // write data

@@ -19,8 +19,7 @@ const int pinSpeaker = PA0;
 #endif
 
 #ifdef ALTIMULTIESP32
-//#include "ToneESP32.h"
-#include <ESP32Tone.h>
+//#include <ESP32Tone.h>
 const int pinSpeaker = 16;
 #endif
 int beepingFrequency;
@@ -89,11 +88,16 @@ void beginBeepSeq()
   {
     for (i = 0; i < 10; i++)
     {
-      //#ifndef ALTIMULTIESP32
+      #ifndef ALTIMULTIESP32
       tone(pinSpeaker, 1600, 1000);
       delay(50);
       noTone(pinSpeaker);
-     // #endif
+      #endif
+      #ifdef ALTIMULTIESP32
+      tone(pinSpeaker, 1600, 50);
+      noTone(pinSpeaker);
+      delay(50);
+      #endif
     }
     delay(1000);
   }
@@ -102,23 +106,33 @@ void longBeep()
 {
   if (NoBeep == false)
   {
-    //#ifndef ALTIMULTIESP32
+    #ifndef ALTIMULTIESP32
     tone(pinSpeaker, beepingFrequency, 1000);
     delay(1500);
     noTone(pinSpeaker);
-    //#endif
-    
+    #endif
+
+    #ifdef ALTIMULTIESP32
+    tone(pinSpeaker, beepingFrequency, 1000);
+    delay(1000);
+    noTone(pinSpeaker);
+    #endif
   }
 }
 void shortBeep()
 {
   if (NoBeep == false)
   {
-  // #ifndef ALTIMULTIESP32
+   #ifndef ALTIMULTIESP32
     tone(pinSpeaker, beepingFrequency, 25);
     delay(300);
     noTone(pinSpeaker);
-   //#endif
+   #endif
+   #ifdef ALTIMULTIESP32
+    tone(pinSpeaker, beepingFrequency, 25);
+    noTone(pinSpeaker);
+    delay(300);
+   #endif
   }
 }
 void beepAltiVersion (int majorNbr, int minorNbr)
@@ -204,7 +218,7 @@ void beepAltitudeNew( long value)
 
 void continuityCheckAsync()
 {
-#ifndef ALTIMULTIESP322
+#ifndef ALTIMULTIESP322222
   int val = 0;     // variable to store the read value
   if (!noContinuity && !allApogeeFiredComplete )
   {
@@ -267,5 +281,5 @@ void continuityCheckAsync()
   }
   else
     noTone(pinSpeaker);
-    #endif
+#endif
 }

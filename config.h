@@ -8,7 +8,7 @@
  * 
  * required libraries:
  * Adafruit_BMP085 or BMP280 or BMP085_stm32
- * avdweb_VirtualDelay
+ * 
  * 
  */
 
@@ -25,10 +25,10 @@
 //#define ALTIMULTIV2
 
 // if you have the STM32 shield then define ALTIMULTISTM32
-//#define ALTIMULTISTM32
+#define ALTIMULTISTM32
 
 // if you have the ESP32 board then define ALTIMULTIESP32
-#define ALTIMULTIESP32
+//#define ALTIMULTIESP32
 
 // choose the pressure sensor that you are using
 // for most board the pressure sensor is either BMP085 or BMP180 
@@ -60,20 +60,6 @@
 #ifdef ALTIMULTISTM32
 #include <itoa.h>
 #endif
-
-/*#ifdef ALTIMULTISTM32
-  #ifdef BMP085_180
-  #undef BMP085_180
-  #define BMP085_180_STM32
-  #endif
-#endif
-
-#ifdef ALTIMULTIESP32
-  #ifdef BMP085_180
-  #undef BMP085_180
-  #define BMP085_180_ESP32
-  #endif
-#endif*/
 
 #ifdef ALTIMULTI 
 #define BOARD_FIRMWARE "AltiMulti"
@@ -158,7 +144,7 @@ extern ConfigStruct config;
 extern void defaultConfig();
 extern bool readAltiConfig();
 extern int getOutPin(int );
-extern bool writeAltiConfig( char * );
+//extern bool writeAltiConfig( char * );
 extern bool writeAltiConfigV2( char * );
 extern void printAltiConfig();
 extern void writeConfigStruc();
