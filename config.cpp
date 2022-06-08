@@ -77,6 +77,8 @@ void defaultConfig()
   config.liftOffAltitude = 10;
   config.batteryType = 0;
   config.recordingTimeout = 120;
+  config.altiID = 0;
+  config.useTelemetryPort =0;
   config.cksum = CheckSumConf(config);
 }
 
@@ -106,134 +108,6 @@ bool readAltiConfig() {
   write the config received by the console
 
 */
-/*bool writeAltiConfig( char *p ) {
-
-  char *str;
-  int i = 0;
-  int strChk=0;
-  char msg[100]="";
-  
-  while ((str = strtok_r(p, ",", &p)) != NULL) // delimiter is the comma
-  {
-    //SerialCom.println(str);
-    switch (i)
-    {
-      case 1:
-        config.unit = atoi(str);
-        strcat(msg, str);
-        break;
-      case 2:
-        config.beepingMode = atoi(str);
-        strcat(msg, str);
-        break;
-      case 3:
-        config.outPut1 = atoi(str);
-        strcat(msg, str);
-        break;
-      case 4:
-        config.outPut2 = atoi(str);
-        strcat(msg, str);
-        break;
-      case 5:
-        config.outPut3 = atoi(str);
-        strcat(msg, str);
-        break;
-      case 6:
-        config.mainAltitude = atoi(str);
-        strcat(msg, str);
-        break;
-      case 7:
-        config.superSonicYesNo = atoi(str);
-        strcat(msg, str);
-        break;
-      case 8:
-        config.outPut1Delay = atol(str);
-        strcat(msg, str);
-        break;
-      case 9:
-        config.outPut2Delay = atol(str);
-        strcat(msg, str);
-        break;
-      case 10:
-        config.outPut3Delay = atol(str);
-        strcat(msg, str);
-        break;
-      case 11:
-        config.beepingFrequency = atoi(str);
-        strcat(msg, str);
-        break;
-      case 12:
-        config.nbrOfMeasuresForApogee = atoi(str);
-        strcat(msg, str);
-        break;
-      case 13:
-        config.endRecordAltitude = atol(str);
-        strcat(msg, str);
-        break;
-      case 14:
-        config.recordTemperature = atoi(str);
-        strcat(msg, str);
-        break;
-      case 15:
-        config.superSonicDelay = atoi(str);
-        strcat(msg, str);
-        break;
-      case 16:
-        config.connectionSpeed = atol(str);
-        strcat(msg, str);
-        break;
-      case 17:
-        config.altimeterResolution = atoi(str);
-        strcat(msg, str);
-        break;
-      case 18:
-        config.eepromSize = atoi(str);
-        strcat(msg, str);
-        break;
-      case 19:
-        config.noContinuity = atoi(str);
-        strcat(msg, str);
-        break;
-      case 20:
-        config.outPut4 = atoi(str);
-        strcat(msg, str);
-        break;
-      case 21:
-        config.outPut4Delay = atol(str);
-        strcat(msg, str);
-        break;
-      case 22:
-        config.liftOffAltitude = atoi(str);
-        strcat(msg, str);
-        break;
-      case 23:
-        config.batteryType = atoi(str);
-        strcat(msg, str);
-        break;
-      case 24:  
-        config.recordingTimeout = atoi(str);
-         strcat(msg, str);
-        break;
-      case 25:
-        //our checksum
-        strChk= atoi(str);
-        break;
-    }
-    i++;
-
-  }
-  //we have a partial config
-  if (i<24)
-    return false;
-
-  if(msgChk(msg, sizeof(msg)) != strChk)
-    return false;  
-  // add checksum
-  config.cksum = CheckSumConf(config);
-
-  writeConfigStruc();
-  return true;
-}*/
 
 bool writeAltiConfigV2( char *p ) {
 
@@ -342,6 +216,11 @@ bool writeAltiConfigV2( char *p ) {
       case 24:
         config.recordingTimeout = (int)commandVal;
         break;
+      case 25:
+        config.altiID = (int)commandVal;
+      case 26:
+        config.useTelemetryPort = (int)commandVal;  
+        break;  
     }
 
   // add checksum
@@ -458,13 +337,26 @@ void printAltiConfig()
   // recording timeout
   sprintf(temp, "%i,", config.recordingTimeout);
   strcat(altiConfig, temp);
+  //altiID
+  sprintf(temp, "%i,", config.altiID);
+  strcat(altiConfig, temp);
+  //useTelemetryPort
+  sprintf(temp, "%i,", config.useTelemetryPort);
+  strcat(altiConfig, temp);
   unsigned int chk = 0;
   chk = msgChk( altiConfig, sizeof(altiConfig) );
   sprintf(temp, "%i;\n", chk);
   strcat(altiConfig, temp);
 
-  SerialCom.print("$");
+  if (config.useTelemetryPort == 1) {
+  Serial.print("$");
+  Serial.print(altiConfig);
+  }
+  else {
+    SerialCom.print("$");
   SerialCom.print(altiConfig);
+  }
+  
 
 //free(altiConfig);
 }

@@ -12,7 +12,7 @@
  * 
  */
 
-
+//#include <Stream.h>
 
 /////////////// config changes start here ///////////
 // here choose one of the board that you want to use
@@ -22,10 +22,10 @@
 
 // if you have a modified ALTIMULTI board using an ATMega328 using different Arduino pins for the
 // pyro output so that they do not fire following a reset of the board then define ALTIMULTIV2
-//#define ALTIMULTIV2
+#define ALTIMULTIV2
 
 // if you have the STM32 shield then define ALTIMULTISTM32
-#define ALTIMULTISTM32
+//#define ALTIMULTISTM32
 
 // if you have the ESP32 board then define ALTIMULTIESP32
 //#define ALTIMULTIESP32
@@ -53,13 +53,15 @@
 //////////// do not change anything after unless you know what you are doing /////////////////////
 
 #define MAJOR_VERSION 1
-#define MINOR_VERSION 26
+#define MINOR_VERSION 27
 #define BUILD 1
 #define CONFIG_START 32
 
 #ifdef ALTIMULTISTM32
 #include <itoa.h>
 #endif
+
+
 
 #ifdef ALTIMULTI 
 #define BOARD_FIRMWARE "AltiMulti"
@@ -77,6 +79,7 @@
 #define BOARD_FIRMWARE "AltiMultiSTM32"
 #define NBR_PYRO_OUT4
 #define SerialCom Serial1
+#define LOG_VOLTAGE
 #endif
 
 #ifdef ALTIMULTIESP32
@@ -85,8 +88,8 @@
 #include "BluetoothSerial.h"
 extern BluetoothSerial SerialBT;
 #define SerialCom SerialBT
-//#define SerialCom Serial
 #define BUFFER_LENGTH I2C_BUFFER_LENGTH
+#define LOG_VOLTAGE
 #endif
 
 
@@ -137,6 +140,8 @@ struct ConfigStruct {
   int liftOffAltitude; //Lift off Altitude in meters
   int batteryType; // 0= Unknown, 1= "2S (7.4 Volts)", 2 = "9 Volts",3 = "3S (11.1 Volts)
   int recordingTimeout; // in Seconds
+  int altiID;
+  int useTelemetryPort;
   int cksum;  
 };
 extern ConfigStruct config;
