@@ -91,18 +91,18 @@ int logger_I2C_eeprom::getLastFlightNbr()
 }
 /*
 
- eraseLastFlight()
- 
- */
-bool logger_I2C_eeprom::eraseLastFlight(){
-int i;
+  eraseLastFlight()
+
+*/
+bool logger_I2C_eeprom::eraseLastFlight() {
+  int i;
   for (i = 0; i < 25; i++)
   {
     if (_FlightConfig[i].flight_start == 0)
     {
-      if(i>0) {
-        _FlightConfig[i-1].flight_start = 0;
-        _FlightConfig[i-1].flight_stop = 0;
+      if (i > 0) {
+        _FlightConfig[i - 1].flight_start = 0;
+        _FlightConfig[i - 1].flight_stop = 0;
         writeFlightList();
         return true;
       }
@@ -183,6 +183,11 @@ void logger_I2C_eeprom::setFlightTemperatureData( long temperature)
 void logger_I2C_eeprom::setFlightPressureData( long pressure) {
   _FlightData.pressure = pressure;
 }
+#ifdef LOG_VOLTAGE
+void logger_I2C_eeprom::setFlightVoltageData( long voltage) {
+  _FlightData.voltage = voltage;
+}
+#endif
 long logger_I2C_eeprom::getFlightStart(int flightNbr)
 {
   return  _FlightConfig[flightNbr].flight_start;
@@ -235,12 +240,21 @@ void logger_I2C_eeprom::printFlightData(int flightNbr)
       strcat(flightData, temp);
       sprintf(temp, "%i,", _FlightData.pressure );
       strcat(flightData, temp);
+#ifdef LOG_VOLTAGE
+      sprintf(temp, "%i,", _FlightData.voltage );
+      strcat(flightData, temp);
+#endif
       unsigned int chk = msgChk(flightData, sizeof(flightData));
       sprintf(temp, "%i", chk);
       strcat(flightData, temp);
       strcat(flightData, ";\n");
-      SerialCom.print("$");
-      SerialCom.print(flightData);
+      if (config.useTelemetryPort == 1) {
+        Serial.print("$");
+        Serial.print(flightData);
+      } else {
+        SerialCom.print("$");
+        SerialCom.print(flightData);
+      }
       delay(10);
     }
   }
