@@ -419,16 +419,16 @@ void setup()
   //and change it to 57600, 115200 etc..
   //Serial.begin(BAUD_RATE);
 #ifdef ALTIMULTIESP32
-  if (config.useTelemetryPort == 1) {
+  //if (config.useTelemetryPort == 1) {
     //#define SerialCom Serial
     //SerialCom = &Serial;
     Serial.begin(38400);
-  } else {
+  //} else {
     //#define SerialCom SerialBT
     char altiName [15];
     sprintf(altiName, "ESP32Rocket%i", (int)config.altiID );
     SerialCom.begin(altiName);
-  }
+  //}
 #else
   SerialCom.begin(config.connectionSpeed);
 #endif
@@ -739,7 +739,8 @@ void SendTelemetry(long sampleTime, int freq) {
     strcat(altiTelem, ",");
 #else
 #ifdef ALTIMULTIESP32
-    int batVoltage = analogRead(4);
+    //int batVoltage = analogRead(4);
+    int batVoltage =analogReadAdjusted(4);
     float bat = VOLT_DIVIDER * ((float)(batVoltage * 3300) / (float)4096000);
     dtostrf(bat, 4, 2, temp);
     strcat(altiTelem, temp);
@@ -768,13 +769,13 @@ void SendTelemetry(long sampleTime, int freq) {
     sprintf(temp, "%i", chk);
     strcat(altiTelem, temp);
     strcat(altiTelem, ";\n");
-    if (config.useTelemetryPort == 1) {
+    #ifdef ALTIMULTIESP32
       Serial.print("$");
       Serial.print(altiTelem);
-    } else {
+    #endif
       SerialCom.print("$");
       SerialCom.print(altiTelem);
-    }
+    
   }
   //free (altiTelem);
 }
@@ -1016,7 +1017,8 @@ void recordAltitude()
         logger.setFlightPressureData((long) bmp.readPressure());
 #ifdef LOG_VOLTAGE
 #ifdef ALTIMULTIESP32
-        float bat = VOLT_DIVIDER * ((float)(analogRead(4) * 3300) / (float)4096000);
+        //float bat = VOLT_DIVIDER * ((float)(analogRead(4) * 3300) / (float)4096000);
+        float bat = VOLT_DIVIDER * ((float)(analogReadAdjusted(4) * 3300) / (float)4096000);
         logger.setFlightVoltageData((long) 100 * bat);
 #endif
 #ifdef ALTIMULTISTM32
@@ -1260,7 +1262,7 @@ void MainMenu()
       while (allApogeeFiredComplete  && allMainFiredComplete )
       {
         // check if we have anything on the serial port
-        if (config.useTelemetryPort == 1) {
+        #ifdef ALTIMULTIESP32
           if (Serial.available())
           {
             readVal = Serial.read();
@@ -1276,7 +1278,7 @@ void MainMenu()
               interpretCommandBuffer(commandbuffer);
             }
           }
-        } else {
+        #endif
           if (SerialCom.available())
           {
             readVal = SerialCom.read();
@@ -1292,7 +1294,7 @@ void MainMenu()
               interpretCommandBuffer(commandbuffer);
             }
           }
-        }
+        
 
         //beep last altitude every 10 second
         while ((millis() - savedTime) > 10000) {
@@ -1315,7 +1317,7 @@ void MainMenu()
       }
     }
 
-    if (config.useTelemetryPort == 1) {
+    #ifdef ALTIMULTIESP32
       while (Serial.available())
       {
         readVal = Serial.read();
@@ -1330,7 +1332,7 @@ void MainMenu()
           break;
         }
       }
-    } else {
+    #endif
       while (SerialCom.available())
       {
         readVal = SerialCom.read();
@@ -1345,7 +1347,7 @@ void MainMenu()
           break;
         }
       }
-    }
+    
   }
   interpretCommandBuffer(commandbuffer);
   //free (commandbuffer);
@@ -1390,9 +1392,9 @@ void interpretCommandBuffer(char *commandbuffer) {
   //get all flight data
   if (commandbuffer[0] == 'a')
   {
-    if (config.useTelemetryPort == 1)
+    #ifdef ALTIMULTIESP32
       Serial.print(F("$start;\n"));
-    else
+    #endif
       SerialCom.print(F("$start;\n"));
     //getFlightList()
     int i;
@@ -1401,24 +1403,24 @@ void interpretCommandBuffer(char *commandbuffer) {
     {
       logger.printFlightData(i);
     }
-    if (config.useTelemetryPort == 1)
+    #ifdef ALTIMULTIESP32
       Serial.print(F("$end;\n"));
-    else
+    #endif
       SerialCom.print(F("$end;\n"));
   }
   //get altimeter config
   else if (commandbuffer[0] == 'b')
   {
-    if (config.useTelemetryPort == 1)
+    #ifdef ALTIMULTIESP32
       Serial.print(F("$start;\n"));
-    else
+    #endif
       SerialCom.print(F("$start;\n"));
 
     printAltiConfig();
 
-    if (config.useTelemetryPort == 1)
+    #ifdef ALTIMULTIESP32
       Serial.print(F("$end;\n"));
-    else
+    #endif
       SerialCom.print(F("$end;\n"));
   }
   //toggle continuity on and off
@@ -1456,9 +1458,9 @@ void interpretCommandBuffer(char *commandbuffer) {
   else if (commandbuffer[0] == 'f')
   {
     FastReading = true;
-    if (config.useTelemetryPort == 1)
+    #ifdef ALTIMULTIESP32
       Serial.print(F("$OK;\n"));
-    else
+    #endif
       SerialCom.print(F("$OK;\n"));
 
   }
@@ -1466,18 +1468,18 @@ void interpretCommandBuffer(char *commandbuffer) {
   else if (commandbuffer[0] == 'g')
   {
     FastReading = false;
-    if (config.useTelemetryPort == 1)
+    #ifdef ALTIMULTIESP32
       Serial.print(F("$OK;\n"));
-    else
+    #endif
       SerialCom.print(F("$OK;\n"));
   }
   //hello
   else if (commandbuffer[0] == 'h')
   {
     //FastReading = false;
-    if (config.useTelemetryPort == 1)
+    #ifdef ALTIMULTIESP32
       Serial.print(F("$OK;\n"));
-    else
+    #endif
       SerialCom.print(F("$OK;\n"));
   }
   // unused
@@ -1539,9 +1541,9 @@ void interpretCommandBuffer(char *commandbuffer) {
 #endif
       //mainLoopEnable = false;
     }
-    if (config.useTelemetryPort == 1)
+    #ifdef ALTIMULTIESP32
       Serial.print(F("$OK;\n"));
-    else
+    #endif
       SerialCom.print(F("$OK;\n"));
   }
   //Number of flight
@@ -1549,9 +1551,9 @@ void interpretCommandBuffer(char *commandbuffer) {
   {
     char flightData[30] = "";
     char temp[9] = "";
-    if (config.useTelemetryPort == 1)
+    #ifdef ALTIMULTIESP32
       Serial.print(F("$start;\n"));
-    else
+    #endif
       SerialCom.print(F("$start;\n"));
 
     strcat(flightData, "nbrOfFlight,");
@@ -1561,30 +1563,29 @@ void interpretCommandBuffer(char *commandbuffer) {
     sprintf(temp, "%i", chk);
     strcat(flightData, temp);
     strcat(flightData, ";\n");
-    if (config.useTelemetryPort == 1) {
+    #ifdef ALTIMULTIESP32
       Serial.print("$");
       Serial.print(flightData);
       Serial.print(F("$end;\n"));
-    }
-    else {
+    #endif
       SerialCom.print("$");
       SerialCom.print(flightData);
       SerialCom.print(F("$end;\n"));
-    }
+    
 
   }
   // send test tram
   else if (commandbuffer[0] == 'o')
   {
-    if (config.useTelemetryPort == 1)
+    #ifdef ALTIMULTIESP32
       Serial.print(F("$start;\n"));
-    else
+    #endif
       SerialCom.print(F("$start;\n"));
 
     sendTestTram();
-    if (config.useTelemetryPort == 1)
+    #ifdef ALTIMULTIESP32
       Serial.print(F("$end;\n"));
-    else
+    #endif
       SerialCom.print(F("$end;\n"));
   }
   //altimeter config param
@@ -1592,15 +1593,15 @@ void interpretCommandBuffer(char *commandbuffer) {
   else if (commandbuffer[0] == 'p')
   {
     if (writeAltiConfigV2(commandbuffer)) {
-      if (config.useTelemetryPort == 1)
+      #ifdef ALTIMULTIESP32
         Serial.print(F("$OK;\n"));
-      else
+      #endif
         SerialCom.print(F("$OK;\n"));
     }
     else {
-      if (config.useTelemetryPort == 1)
+      #ifdef ALTIMULTIESP32
         Serial.print(F("$KO;\n"));
-      else
+      #endif
         SerialCom.print(F("$KO;\n"));
     }
   }
@@ -1609,9 +1610,9 @@ void interpretCommandBuffer(char *commandbuffer) {
     writeConfigStruc();
     readAltiConfig();
     initAlti();
-    if (config.useTelemetryPort == 1)
+   #ifdef ALTIMULTIESP32
       Serial.print(F("$OK;\n"));
-    else
+    #endif
       SerialCom.print(F("$OK;\n"));
   }
   //this will read one flight
@@ -1630,15 +1631,15 @@ void interpretCommandBuffer(char *commandbuffer) {
 
     if (atol(temp) > -1)
     {
-      if (config.useTelemetryPort == 1)
+      #ifdef ALTIMULTIESP32
         Serial.print(F("$start;\n"));
-      else
+      #endif
         SerialCom.print(F("$start;\n"));
 
       logger.printFlightData(atoi(temp));
-      if (config.useTelemetryPort == 1)
+      #ifdef ALTIMULTIESP32
         Serial.print(F("$end;\n"));
-      else
+      #endif
         SerialCom.print(F("$end;\n"));
     }
     else
@@ -1691,9 +1692,9 @@ void interpretCommandBuffer(char *commandbuffer) {
       SerialCom.print(F("Telemetry disabled\n"));
       telemetryEnable = false;
     }
-    if (config.useTelemetryPort == 1)
+    #ifdef ALTIMULTIESP32
       Serial.print(F("$OK;\n"));
-    else
+    #endif
       SerialCom.print(F("$OK;\n"));
   }
 
@@ -1701,9 +1702,9 @@ void interpretCommandBuffer(char *commandbuffer) {
   // empty command
   else if (commandbuffer[0] == ' ')
   {
-    if (config.useTelemetryPort == 1)
+    #ifdef ALTIMULTIESP32
       Serial.print(F("$K0;\n"));
-    else
+    #endif
       SerialCom.print(F("$K0;\n"));
   }
   else
@@ -1779,7 +1780,8 @@ void checkBatVoltage(float minVolt) {
   if ((millis() - lastBattWarning) > 10000) {
     lastBattWarning = millis();
     // pinMode(4, INPUT_ANALOG);
-    int batVoltage = analogRead(4);
+    //int batVoltage = analogRead(4);
+    double batVoltage =analogReadAdjusted(4);
 
     float bat = VOLT_DIVIDER * ((float)(batVoltage * 3300) / (float)4096000);
 
@@ -1787,11 +1789,11 @@ void checkBatVoltage(float minVolt) {
     if (bat < minVolt) {
       for (int i = 0; i < 10; i++)
       {
-        /*        tone(pinSpeaker, 1600, 1000);
+                tone(pinSpeaker, 1600, 1000);
 
                 noTone(pinSpeaker);
                  delay(50);
-        */
+        
       }
       delay(1000);
     }
@@ -1799,6 +1801,55 @@ void checkBatVoltage(float minVolt) {
 #endif
 
 }
+#ifdef ALTIMULTIESP32
+double analogReadAdjusted(byte pinNumber){
+
+  // Specify the adjustment factors.
+  const double f1 = 1.7111361460487501e+001;
+  const double f2 = 4.2319467860421662e+000;
+  const double f3 = -1.9077375643188468e-002;
+  const double f4 = 5.4338055402459246e-005;
+  const double f5 = -8.7712931081088873e-008;
+  const double f6 = 8.7526709101221588e-011;
+  const double f7 = -5.6536248553232152e-014;
+  const double f8 = 2.4073049082147032e-017;
+  const double f9 = -6.7106284580950781e-021;
+  const double f10 = 1.1781963823253708e-024;
+  const double f11 = -1.1818752813719799e-028;
+  const double f12 = 5.1642864552256602e-033;
+
+  // Specify the number of loops for one measurement.
+  const int loops = 40;
+
+  // Specify the delay between the loops.
+  const int loopDelay = 1;
+
+  // Initialize the used variables.
+  int counter = 1;
+  int inputValue = 0;
+  double totalInputValue = 0;
+  double averageInputValue = 0;
+
+  // Loop to get the average of different analog values.
+  for (counter = 1; counter <= loops; counter++) {
+
+    // Read the analog value.
+    inputValue = analogRead(pinNumber);
+
+    // Add the analog value to the total.
+    totalInputValue += inputValue;
+
+    // Wait some time after each loop.
+    delay(loopDelay);
+  }
+
+  // Calculate the average input value.
+  averageInputValue = totalInputValue / loops;
+
+  // Calculate and return the adjusted input value.
+  return f1 + f2 * pow(averageInputValue, 1) + f3 * pow(averageInputValue, 2) + f4 * pow(averageInputValue, 3) + f5 * pow(averageInputValue, 4) + f6 * pow(averageInputValue, 5) + f7 * pow(averageInputValue, 6) + f8 * pow(averageInputValue, 7) + f9 * pow(averageInputValue, 8) + f10 * pow(averageInputValue, 9) + f11 * pow(averageInputValue, 10) + f12 * pow(averageInputValue, 11);
+}
+#endif
 /*
    Turn on or off one altimeter output
    This is used to test them
@@ -1825,15 +1876,11 @@ void sendTestTram() {
   sprintf(temp, "%i", chk);
   strcat(altiTest, temp);
   strcat(altiTest, ";\n");
-  if (config.useTelemetryPort == 1) {
+  #ifdef ALTIMULTIESP32
     Serial.print("$");
     Serial.print(altiTest);
-  }
-  else {
+  #endif
     SerialCom.print("$");
     SerialCom.print(altiTest);
-  }
+  
 }
-
-
-//}

@@ -248,13 +248,13 @@ void logger_I2C_eeprom::printFlightData(int flightNbr)
       sprintf(temp, "%i", chk);
       strcat(flightData, temp);
       strcat(flightData, ";\n");
-      if (config.useTelemetryPort == 1) {
+      #ifdef ALTIMULTIESP32
         Serial.print("$");
         Serial.print(flightData);
-      } else {
+      #endif
         SerialCom.print("$");
         SerialCom.print(flightData);
-      }
+      
       delay(10);
     }
   }

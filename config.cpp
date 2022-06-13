@@ -218,6 +218,7 @@ bool writeAltiConfigV2( char *p ) {
         break;
       case 25:
         config.altiID = (int)commandVal;
+        break;
       case 26:
         config.useTelemetryPort = (int)commandVal;  
         break;  
@@ -348,14 +349,13 @@ void printAltiConfig()
   sprintf(temp, "%i;\n", chk);
   strcat(altiConfig, temp);
 
-  if (config.useTelemetryPort == 1) {
+  #ifdef ALTIMULTIESP32
   Serial.print("$");
   Serial.print(altiConfig);
-  }
-  else {
+  #endif
     SerialCom.print("$");
   SerialCom.print(altiConfig);
-  }
+  
   
 
 //free(altiConfig);
