@@ -25,10 +25,10 @@
 //#define ALTIMULTIV2
 
 // if you have the STM32 shield then define ALTIMULTISTM32
-//#define ALTIMULTISTM32
+#define ALTIMULTISTM32
 
 // if you have the ESP32 board then define ALTIMULTIESP32
-#define ALTIMULTIESP32
+//#define ALTIMULTIESP32
 
 // choose the pressure sensor that you are using
 // for most board the pressure sensor is either BMP085 or BMP180 
