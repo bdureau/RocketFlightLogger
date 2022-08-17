@@ -227,7 +227,7 @@ void logger_I2C_eeprom::printFlightData(int flightNbr)
     {
       i = readFlight(i) + 1;
       char flightData[120] = "";
-      char temp[9] = "";
+      char temp[20] = "";
       currentTime = currentTime + getFlightTimeData();
       strcat(flightData, "data,");
       sprintf(temp, "%i,", flightNbr );
