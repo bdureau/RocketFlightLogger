@@ -5,6 +5,9 @@
 #ifdef ALTIMULTIESP32
 #include <ESP32Tone.h>
 #endif
+#ifdef ALTIDUOESP32
+#include <ESP32Tone.h>
+#endif
 extern boolean noContinuity;
 //Our drogue has been ejected i.e: apogee has been detected
 extern boolean allApogeeFiredComplete ;

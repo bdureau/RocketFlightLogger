@@ -1,5 +1,5 @@
 /*
-  Rocket Flight Logger ver 1.26
+  Rocket Flight Logger ver 1.27
   Copyright Boris du Reau 2012-2022
 
   The following is a datalogger for logging rocket flight.
@@ -115,6 +115,9 @@
   starting using custom libraries
   Major changes on version 1.27
   Logging voltage
+  Major changes on version 1.28
+  Adding ESP32 C3
+  
 */
 
 //altimeter configuration lib
@@ -183,6 +186,9 @@ unsigned long mainDeployAltitude;
 #ifdef ALTIMULTIESP32
 BluetoothSerial SerialBT;
 #endif
+#ifdef ALTIDUOESP32
+BluetoothSerial SerialBT;
+#endif
 
 // pin used by the jumpers
 #ifdef ALTIMULTISTM32
@@ -200,6 +206,10 @@ const int pinAltitude2 = 7;
 #ifdef ALTIMULTIESP32
 const int pinAltitude1 = 4;
 const int pinAltitude2 = 0;
+#endif
+#ifdef ALTIDUOESP32
+const int pinAltitude1 = -1;
+const int pinAltitude2 = -1;
 #endif
 //note that the STM32 board has 4 pyro output
 #ifdef ALTIMULTISTM32
@@ -240,14 +250,22 @@ const int pinChannel2Continuity = 17;
 // third output
 const int pinChannel3Continuity = 23;
 #endif
-
+#ifdef ALTIDUOESP32
+//by default apogee pin
+const int pinChannel1Continuity = -1;
+// by default continuity for the main
+const int pinChannel2Continuity = -1;
+#endif
 float FEET_IN_METER = 1;
 
 
 boolean Output1Fired = false;
 boolean Output2Fired = false;
+#ifdef NBR_PYRO_OUT3
 boolean Output3Fired = false;
+#endif
 #ifdef NBR_PYRO_OUT4
+boolean Output3Fired = false;
 boolean Output4Fired = false;
 #endif
 boolean allApogeeFiredComplete = false;
@@ -324,8 +342,11 @@ void ResetGlobalVar() {
 
   Output1Fired = false;
   Output2Fired = false;
+#ifdef NBR_PYRO_OUT3
   Output3Fired = false;
+#endif
 #ifdef NBR_PYRO_OUT4
+  Output3Fired = false;
   Output4Fired = false;
 #endif
 
@@ -367,11 +388,17 @@ void initAlti() {
     pos++;
     continuityPins[pos] = pinChannel2Continuity;
   }
+#ifdef NBR_PYRO_OUT3
   if (config.outPut3 != 3) {
     pos++;
     continuityPins[pos] = pinChannel3Continuity;
   }
+#endif
 #ifdef NBR_PYRO_OUT4
+  if (config.outPut3 != 3) {
+    pos++;
+    continuityPins[pos] = pinChannel3Continuity;
+  }
   if (config.outPut4 != 3)  {
     pos++;
     continuityPins[pos] = pinChannel4Continuity;
@@ -429,6 +456,11 @@ void setup()
     sprintf(altiName, "ESP32Rocket%i", (int)config.altiID );
     SerialCom.begin(altiName);
   //}
+ #elif defined(ALTIDUOESP32)
+ Serial.begin(38400);
+ char altiName [15];
+    sprintf(altiName, "ESP32Rocket%i", (int)config.altiID );
+    SerialCom.begin(altiName);
 #else
   SerialCom.begin(config.connectionSpeed);
 #endif
@@ -447,6 +479,8 @@ void setup()
   //software pull up so that all bluetooth modules work!!!
 #ifdef ALTIMULTISTM32
   pinMode(PB11, INPUT_PULLUP);
+  pinMode(PA8, INPUT_PULLUP);
+  //pinMode(PA9, INPUT_PULLUP);
 #endif
 
   //Presure Sensor Initialisation
@@ -477,9 +511,12 @@ void setup()
   //Initialise the output pin
   pinMode(pyroOut1, OUTPUT);
   pinMode(pyroOut2, OUTPUT);
+#ifdef NBR_PYRO_OUT3
   pinMode(pyroOut3, OUTPUT);
+#endif
   //some Altimeter such as the STM32 have 4 pyro outputs
 #ifdef NBR_PYRO_OUT4
+  pinMode(pyroOut3, OUTPUT);
   pinMode(pyroOut4, OUTPUT);
 #endif
   pinMode(pinSpeaker, OUTPUT);
@@ -489,16 +526,22 @@ void setup()
 
   pinMode(pinChannel1Continuity , INPUT);
   pinMode(pinChannel2Continuity , INPUT);
+#ifdef NBR_PYRO_OUT3
   pinMode(pinChannel3Continuity , INPUT);
+#endif
 #ifdef NBR_PYRO_OUT4
+  pinMode(pinChannel3Continuity , INPUT);
   pinMode(pinChannel4Continuity , INPUT);
 #endif
 
   //Make sure that the output are turned off
   digitalWrite(pyroOut1, LOW);
   digitalWrite(pyroOut2, LOW);
+#ifdef NBR_PYRO_OUT3
   digitalWrite(pyroOut3, LOW);
+#endif
 #ifdef NBR_PYRO_OUT4
+  digitalWrite(pyroOut3, LOW);
   digitalWrite(pyroOut4, LOW);
 #endif
   digitalWrite(pinSpeaker, LOW);
@@ -613,7 +656,7 @@ void setEventState(int pyroOut, boolean state)
     SerialCom.println(F("Output2Fired"));
 #endif
   }
-
+#ifdef NBR_PYRO_OUT3
   if (pyroOut == pyroOut3)
   {
     Output3Fired = state;
@@ -621,7 +664,16 @@ void setEventState(int pyroOut, boolean state)
     SerialCom.println(F("Output3Fired"));
 #endif
   }
+#endif
+  
 #ifdef NBR_PYRO_OUT4
+  if (pyroOut == pyroOut3)
+  {
+    Output3Fired = state;
+#ifdef SERIAL_DEBUG
+    SerialCom.println(F("Output3Fired"));
+#endif
+  }
   if (pyroOut == pyroOut4)
   {
     Output4Fired = state;
@@ -702,6 +754,7 @@ void SendTelemetry(long sampleTime, int freq) {
     else {
       strcat(altiTelem, "-1,");
     }
+#ifndef ALTIDUOESP32    
     if (config.outPut3 != 3) {
       //check continuity
       val = digitalRead(pinChannel3Continuity);
@@ -713,6 +766,7 @@ void SendTelemetry(long sampleTime, int freq) {
     else {
       strcat(altiTelem, "-1,");
     }
+#endif
     //#ifdef NBR_PYRO_OUT4
 #ifdef ALTIMULTISTM32
     if (config.outPut4 != 3) {
@@ -816,7 +870,9 @@ void recordAltitude()
   int OutputType[4] = {3, 3, 3, 3};
   OutputType[0] = config.outPut1;
   OutputType[1] = config.outPut2;
+#ifndef NBR_PYRO_OUT2
   OutputType[2] = config.outPut3;
+#endif  
 #ifdef ALTIMULTISTM32
   OutputType[3] = config.outPut4;
 #endif
@@ -825,8 +881,10 @@ void recordAltitude()
     OutputPins[0] = pyroOut1;
   if (config.outPut2 != 3)
     OutputPins[1] = pyroOut2;
+#ifndef NBR_PYRO_OUT2
   if (config.outPut3 != 3)
     OutputPins[2] = pyroOut3;
+#endif
 #ifdef ALTIMULTISTM32
   if (config.outPut4 != 3)
     OutputPins[3] = pyroOut4;
@@ -851,8 +909,11 @@ void recordAltitude()
 
   if (config.outPut1 == 3) Output1Fired = true;
   if (config.outPut2 == 3) Output2Fired = true;
+#ifdef NBR_PYRO_OUT3
   if (config.outPut3 == 3) Output3Fired = true;
+#endif
 #ifdef NBR_PYRO_OUT4
+  if (config.outPut3 == 3) Output3Fired = true;
   if (config.outPut4 == 3) Output4Fired = true;
 #endif
 
@@ -860,8 +921,11 @@ void recordAltitude()
   SerialCom.println(F("Config delay:"));
   SerialCom.println(config.outPut1Delay);
   SerialCom.println(config.outPut2Delay);
+#ifdef NBR_PYRO_OUT3
   SerialCom.println(config.outPut3Delay);
+#endif
 #ifdef NBR_PYRO_OUT4
+  SerialCom.println(config.outPut3Delay);
   SerialCom.println(config.outPut4Delay);
 #endif
 
@@ -1508,9 +1572,11 @@ void interpretCommandBuffer(char *commandbuffer) {
         case 2:
           fireOutput(pyroOut2, fire);
           break;
+#ifndef NBR_PYRO_OUT2
         case 3:
           fireOutput(pyroOut3, fire);
           break;
+#endif          
 #ifdef NBR_PYRO_OUT4
         case 4:
           fireOutput(pyroOut4, fire);
@@ -1741,8 +1807,11 @@ void resetFlight() {
   liftOff = false;
   Output1Fired = false;
   Output2Fired = false;
-  Output3Fired = false;
 #ifdef NBR_PYRO_OUT4
+  Output3Fired = false;
+#endif
+#ifdef NBR_PYRO_OUT4
+  Output3Fired = false;
   Output4Fired = false;
 #endif
 
@@ -1806,7 +1875,6 @@ void checkBatVoltage(float minVolt) {
 
                 noTone(pinSpeaker);
                  delay(50);
-        
       }
       delay(1000);
     }

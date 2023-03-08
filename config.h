@@ -25,10 +25,13 @@
 //#define ALTIMULTIV2
 
 // if you have the STM32 shield then define ALTIMULTISTM32
-#define ALTIMULTISTM32
+//#define ALTIMULTISTM32
 
-// if you have the ESP32 board then define ALTIMULTIESP32
-//#define ALTIMULTIESP32
+// if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
+#define ALTIMULTIESP32
+
+// if you have the ESP32-C3F AltiDuo board then define ALTIDUOESP32
+//#define ALTIDUOESP32
 
 // choose the pressure sensor that you are using
 // for most board the pressure sensor is either BMP085 or BMP180 
@@ -53,7 +56,7 @@
 //////////// do not change anything after unless you know what you are doing /////////////////////
 
 #define MAJOR_VERSION 1
-#define MINOR_VERSION 27
+#define MINOR_VERSION 28
 #define BUILD 1
 #define CONFIG_START 32
 
@@ -93,7 +96,15 @@ extern BluetoothSerial SerialBT;
 #endif
 
 
-
+#ifdef ALTIDUOESP32
+#define BOARD_FIRMWARE "AltiDuoESP32"
+#define NBR_PYRO_OUT2
+#include "BluetoothSerial.h"
+extern BluetoothSerial SerialBT;
+#define SerialCom SerialBT
+#define BUFFER_LENGTH I2C_BUFFER_LENGTH
+#define LOG_VOLTAGE
+#endif
 
 
 #include "Arduino.h"
@@ -105,9 +116,13 @@ extern BluetoothSerial SerialBT;
 extern const int pyroOut1;
 //pyro out 2
 extern const int pyroOut2;
+#ifdef NBR_PYRO_OUT3
 //pyro out 3
 extern const int pyroOut3;
-#ifdef ALTIMULTISTM32
+#endif
+#ifdef NBR_PYRO_OUT4
+//pyro out 3
+extern const int pyroOut3;
 //pyro out 4
 extern const int pyroOut4;
 #endif
@@ -129,7 +144,7 @@ struct ConfigStruct {
   int beepingFrequency;  // this beeping frequency can be changed
   int nbrOfMeasuresForApogee; //how many measure to decide that apogee has been reached
   int endRecordAltitude;  // stop recording when landing define under which altitude we are not recording
-  int recordTemperature;  //decide if we want to record temperature
+  int telemetryType;  //telemetry module type 0 is fast, 1 is average, 2 is slow
   int superSonicDelay;   //nbr of ms during when we ignore any altitude measurements
   long connectionSpeed;   //altimeter connection baudrate
   int altimeterResolution; // BMP sensor resolution
