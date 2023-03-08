@@ -22,8 +22,12 @@ const int pinSpeaker = PA0;
 //#include <ESP32Tone.h>
 const int pinSpeaker = 16;
 #endif
-int beepingFrequency;
 
+#ifdef ALTIDUOESP32
+const int pinSpeaker = -1;
+#endif
+
+int beepingFrequency;
 
 int lastPin = -1;
 int currentPinPos = 0;

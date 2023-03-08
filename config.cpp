@@ -5,17 +5,20 @@
 const int pyroOut1 = PA1;
 #endif
 #ifdef ALTIMULTIV2
-const int pyroOut1 = 9; //12; 
+const int pyroOut1 = 9;  
 #endif
 #ifdef ALTIMULTI
 const int pyroOut1 = 9;
 #endif
 #ifdef ALTIMULTIESP32
-const int pyroOut1 = 2;//15;//34;
+const int pyroOut1 = 2;
+#endif
+#ifdef ALTIDUOESP32
+const int pyroOut1 = -1;
 #endif
 //pyro out 2
 #ifdef ALTIMULTIV2
-const int pyroOut2 = 12; //9; 
+const int pyroOut2 = 12;  
 #endif
 #ifdef ALTIMULTI
 const int pyroOut2 = 13;
@@ -26,9 +29,12 @@ const int pyroOut2 = PA3;
 #ifdef ALTIMULTIESP32
 const int pyroOut2 = 18;
 #endif
+#ifdef ALTIDUOESP32
+const int pyroOut2 = -1;
+#endif
 //pyro out 3
 #ifdef ALTIMULTISTM32
-const int pyroOut3 = PA5; //17;
+const int pyroOut3 = PA5; 
 #endif
 #ifdef ALTIMULTI
 const int pyroOut3 = 17;
@@ -63,10 +69,9 @@ void defaultConfig()
   config.mainAltitude = 50;
   config.superSonicYesNo = 0;
   config.beepingFrequency = 440;
-  //config.separationVelocity = 10;
   config.nbrOfMeasuresForApogee = 5;
   config.endRecordAltitude = 3; // stop recording when landing define under which altitude we are not recording
-  config.recordTemperature = 0; //decide if we want to record temperature
+  config.telemetryType = 0; //what type of telemetry module
   config.superSonicDelay = 0;
   config.connectionSpeed = 38400;
   config.altimeterResolution = 0; //0 to 4 ie: from low resolution to high
@@ -184,7 +189,7 @@ bool writeAltiConfigV2( char *p ) {
         config.endRecordAltitude = (int)commandVal;
         break;
       case 14:
-        config.recordTemperature = (int)commandVal;
+        config.telemetryType = (int)commandVal;
         break;
       case 15:
         config.superSonicDelay =(int)commandVal;
@@ -311,7 +316,7 @@ void printAltiConfig()
   strcat(altiConfig, temp);
   sprintf(temp, "%i,", config.endRecordAltitude);
   strcat(altiConfig, temp);
-  sprintf(temp, "%i,", config.recordTemperature);
+  sprintf(temp, "%i,", config.telemetryType);
   strcat(altiConfig, temp);
   sprintf(temp, "%i,", config.superSonicDelay);
   strcat(altiConfig, temp);
@@ -353,8 +358,20 @@ void printAltiConfig()
   Serial.print("$");
   Serial.print(altiConfig);
   #endif
-    SerialCom.print("$");
-  SerialCom.print(altiConfig);
+  SerialCom.print("$");
+  //SerialCom.print(altiConfig);
+  // the following will slow down the connection speed so that it works better with telemetry module
+  // or bluetooth module with no buffer
+  if (config.useTelemetryPort == 1){
+  for(int j=0; j< sizeof(altiConfig);j++) {
+    SerialCom.print(altiConfig[j]);
+    delay(2);
+  }
+  } 
+  else
+    SerialCom.print(altiConfig);
+  
+  
   
   
 

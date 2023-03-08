@@ -254,8 +254,17 @@ void logger_I2C_eeprom::printFlightData(int flightNbr)
       #endif
         SerialCom.print("$");
         SerialCom.print(flightData);
-      
-      delay(10);
+
+      //This will slow down the data
+      // this is for telemetry modules without enought buffer
+      if (config.telemetryType == 0) 
+        delay(0);
+      else if (config.telemetryType == 1)  
+        delay(20); 
+      else if (config.telemetryType == 2)
+        delay(50);
+      else if (config.telemetryType == 3)
+        delay(100);
     }
   }
 }
