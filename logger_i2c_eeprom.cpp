@@ -188,13 +188,39 @@ void logger_I2C_eeprom::setFlightVoltageData( long voltage) {
   _FlightData.voltage = voltage;
 }
 #endif
+#ifdef ALTIMULTIESP32_ACCELERO
+void logger_I2C_eeprom::setADXL375accelX(long accelX)
+{
+  _FlightData.ADXL375accelX = accelX;
+}
+void logger_I2C_eeprom::setADXL375accelY(long accelY)
+{
+  _FlightData.ADXL375accelY = accelY; 
+}
+void logger_I2C_eeprom::setADXL375accelZ(long accelZ)
+{
+  _FlightData.ADXL375accelZ = accelZ; 
+}
+void logger_I2C_eeprom::setADXL345accelX(long accelX)
+{
+  _FlightData.ADXL345accelX = accelX; 
+}
+void logger_I2C_eeprom::setADXL345accelY(long accelY)
+{
+  _FlightData.ADXL345accelY = accelY;
+}
+void logger_I2C_eeprom::setADXL345accelZ(long accelZ)
+{
+  _FlightData.ADXL345accelZ = accelZ;
+}
+#endif    
 long logger_I2C_eeprom::getFlightStart(int flightNbr)
 {
-  return  _FlightConfig[flightNbr].flight_start;
+  return _FlightConfig[flightNbr].flight_start;
 }
 long logger_I2C_eeprom::getFlightStop(int flightNbr)
 {
-  return  _FlightConfig[flightNbr].flight_stop;
+  return _FlightConfig[flightNbr].flight_stop;
 }
 long logger_I2C_eeprom::getFlightTimeData()
 {
@@ -244,11 +270,26 @@ void logger_I2C_eeprom::printFlightData(int flightNbr)
       sprintf(temp, "%i,", _FlightData.voltage );
       strcat(flightData, temp);
 #endif
+#ifdef ALTIMULTIESP32_ACCELERO
+      sprintf(temp, "%i,", _FlightData.ADXL375accelX );
+      strcat(flightData, temp);
+      sprintf(temp, "%i,", _FlightData.ADXL375accelY );
+      strcat(flightData, temp);
+      sprintf(temp, "%i,", _FlightData.ADXL375accelZ );
+      strcat(flightData, temp);
+      sprintf(temp, "%i,", _FlightData.ADXL345accelX );
+      strcat(flightData, temp);
+      sprintf(temp, "%i,", _FlightData.ADXL345accelY );
+      strcat(flightData, temp);
+      sprintf(temp, "%i,", _FlightData.ADXL345accelZ );
+      strcat(flightData, temp);
+#endif
       unsigned int chk = msgChk(flightData, sizeof(flightData));
       sprintf(temp, "%i", chk);
       strcat(flightData, temp);
       strcat(flightData, ";\n");
-      #ifdef ALTIMULTIESP32
+      //#ifdef ALTIMULTIESP32
+      #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO
         Serial.print("$");
         Serial.print(flightData);
       #endif

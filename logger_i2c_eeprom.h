@@ -24,7 +24,16 @@ struct FlightDataStruct {
   #ifdef LOG_VOLTAGE
   long voltage;
   #endif
-  
+
+  #ifdef ALTIMULTIESP32_ACCELERO
+  long ADXL375accelX;
+  long ADXL375accelY;
+  long ADXL375accelZ;
+
+  long ADXL345accelX;
+  long ADXL345accelY;
+  long ADXL345accelZ;
+  #endif
 };
 struct FlightConfigStruct {
   long flight_start;    
@@ -67,6 +76,14 @@ public:
     void setFlightPressureData( long pressure);
     #ifdef LOG_VOLTAGE
     void setFlightVoltageData(long voltage);
+    #endif
+    #ifdef ALTIMULTIESP32_ACCELERO
+    void setADXL375accelX(long accelX);
+    void setADXL375accelY(long accelY);
+    void setADXL375accelZ(long accelZ);
+    void setADXL345accelX(long accelX);
+    void setADXL345accelY(long accelY);
+    void setADXL345accelZ(long accelZ);
     #endif
     void setFlightTemperatureData (long temperature);
     long getFlightAltitudeData();

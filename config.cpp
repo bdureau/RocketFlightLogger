@@ -13,6 +13,9 @@ const int pyroOut1 = 9;
 #ifdef ALTIMULTIESP32
 const int pyroOut1 = 2;
 #endif
+#ifdef ALTIMULTIESP32_ACCELERO
+const int pyroOut1 = 2;
+#endif
 #ifdef ALTIDUOESP32
 const int pyroOut1 = -1;
 #endif
@@ -29,6 +32,9 @@ const int pyroOut2 = PA3;
 #ifdef ALTIMULTIESP32
 const int pyroOut2 = 18;
 #endif
+#ifdef ALTIMULTIESP32_ACCELERO
+const int pyroOut2 = 18;
+#endif
 #ifdef ALTIDUOESP32
 const int pyroOut2 = -1;
 #endif
@@ -43,6 +49,9 @@ const int pyroOut3 = 17;
 const int pyroOut3 = 17;
 #endif
 #ifdef ALTIMULTIESP32
+const int pyroOut3 = 19;
+#endif
+#ifdef ALTIMULTIESP32_ACCELERO
 const int pyroOut3 = 19;
 #endif
 //pyro out 4
@@ -94,10 +103,16 @@ bool readAltiConfig() {
   #ifdef ALTIMULTIESP32
   EEPROM.begin(512);
   #endif
+  #ifdef ALTIMULTIESP32_ACCELERO
+  EEPROM.begin(512);
+  #endif
   for ( i = 0; i < sizeof(config); i++ ) {
     *((char*)&config + i) = EEPROM.read(CONFIG_START + i);
   }
   #ifdef ALTIMULTIESP32
+  EEPROM.end();
+  #endif
+  #ifdef ALTIMULTIESP32_ACCELERO
   EEPROM.end();
   #endif
   if ( config.cksum != CheckSumConf(config) ) {
@@ -245,10 +260,17 @@ void writeConfigStruc()
   #ifdef ALTIMULTIESP32
   EEPROM.begin(512);
   #endif
+  #ifdef ALTIMULTIESP32_ACCELERO
+  EEPROM.begin(512);
+  #endif
   for ( i = 0; i < sizeof(config); i++ ) {
     EEPROM.write(CONFIG_START + i, *((char*)&config + i));
   }
   #ifdef ALTIMULTIESP32
+  EEPROM.commit();
+  EEPROM.end();
+  #endif
+  #ifdef ALTIMULTIESP32_ACCELERO
   EEPROM.commit();
   EEPROM.end();
   #endif
@@ -355,6 +377,10 @@ void printAltiConfig()
   strcat(altiConfig, temp);
 
   #ifdef ALTIMULTIESP32
+  Serial.print("$");
+  Serial.print(altiConfig);
+  #endif
+  #ifdef ALTIMULTIESP32_ACCELERO
   Serial.print("$");
   Serial.print(altiConfig);
   #endif
