@@ -4,6 +4,7 @@
  * 
  * This is where you should do all the configuration
  * 
+ * 
  * First you need to make sure that you have all the require Arduino libraries to compile it
  * 
  * required libraries:
@@ -28,7 +29,10 @@
 //#define ALTIMULTISTM32
 
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
-#define ALTIMULTIESP32
+//#define ALTIMULTIESP32
+
+// if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
+#define ALTIMULTIESP32_ACCELERO
 
 // if you have the ESP32-C3F AltiDuo board then define ALTIDUOESP32
 //#define ALTIDUOESP32
@@ -38,6 +42,7 @@
 // note that BMP085 and 180 are compatible no need to use the new BMP180 library
 #define BMP085_180
 
+//#define BMP_180
 // if you have a custom ATMega 328 board using a BMP280 pressure sensor 
 //#define BMP280
 
@@ -55,8 +60,8 @@
 ////////////// config changes end here /////////////
 //////////// do not change anything after unless you know what you are doing /////////////////////
 
-#define MAJOR_VERSION 1
-#define MINOR_VERSION 28
+#define MAJOR_VERSION 2
+#define MINOR_VERSION 0
 #define BUILD 1
 #define CONFIG_START 32
 
@@ -95,6 +100,15 @@ extern BluetoothSerial SerialBT;
 #define LOG_VOLTAGE
 #endif
 
+#ifdef ALTIMULTIESP32_ACCELERO
+#define BOARD_FIRMWARE "AltiMultiESP32_accel"
+#define NBR_PYRO_OUT3
+#include "BluetoothSerial.h"
+extern BluetoothSerial SerialBT;
+#define SerialCom SerialBT
+#define BUFFER_LENGTH I2C_BUFFER_LENGTH
+#define LOG_VOLTAGE
+#endif
 
 #ifdef ALTIDUOESP32
 #define BOARD_FIRMWARE "AltiDuoESP32"
