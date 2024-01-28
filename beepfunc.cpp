@@ -17,7 +17,7 @@ const int pinSpeaker = 12;
 const int pinSpeaker = PA0;
 #endif
 
-#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO
+#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
 //#include <ESP32Tone.h>
 const int pinSpeaker = 16;
 #endif
@@ -92,13 +92,13 @@ void beginBeepSeq()
     for (i = 0; i < 10; i++)
     {
       //#ifndef ALTIMULTIESP32
-      #if not defined ALTIMULTIESP32 || not defined ALTIMULTIESP32_ACCELERO
+      #if not defined ALTIMULTIESP32 && not defined ALTIMULTIESP32_ACCELERO && not defined ALTIMULTIESP32_ACCELERO_375 && not defined ALTIMULTIESP32_ACCELERO_345
       tone(pinSpeaker, 1600, 1000);
       delay(50);
       noTone(pinSpeaker);
       #endif
       //#ifdef ALTIMULTIESP32
-      #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO
+      #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
       tone(pinSpeaker, 1600, 50);
       noTone(pinSpeaker);
       delay(50);
@@ -112,14 +112,14 @@ void longBeep()
   if (NoBeep == false)
   {
     //#ifndef ALTIMULTIESP32
-    #if not defined ALTIMULTIESP32 || not defined ALTIMULTIESP32_ACCELERO
+    #if not defined ALTIMULTIESP32 && not defined ALTIMULTIESP32_ACCELERO && not defined ALTIMULTIESP32_ACCELERO_375 && not defined ALTIMULTIESP32_ACCELERO_345
     tone(pinSpeaker, beepingFrequency, 1000);
     delay(1500);
     noTone(pinSpeaker);
     #endif
 
     //#ifdef ALTIMULTIESP32
-    #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO
+    #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
     tone(pinSpeaker, beepingFrequency, 1000);
     delay(1000);
     noTone(pinSpeaker);
@@ -131,13 +131,13 @@ void shortBeep()
   if (NoBeep == false)
   {
    //#ifndef ALTIMULTIESP32
-   #if not defined ALTIMULTIESP32 || not defined ALTIMULTIESP32_ACCELERO
+   #if not defined ALTIMULTIESP32 && not defined ALTIMULTIESP32_ACCELERO && not defined ALTIMULTIESP32_ACCELERO_375 && not defined ALTIMULTIESP32_ACCELERO_345
     tone(pinSpeaker, beepingFrequency, 25);
     delay(300);
     noTone(pinSpeaker);
    #endif
    //#ifdef ALTIMULTIESP32
-   #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO
+   #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
     tone(pinSpeaker, beepingFrequency, 25);
     noTone(pinSpeaker);
     delay(300);

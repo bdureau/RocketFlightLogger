@@ -13,7 +13,7 @@ const int pyroOut1 = 9;
 #ifdef ALTIMULTIESP32
 const int pyroOut1 = 2;
 #endif
-#ifdef ALTIMULTIESP32_ACCELERO
+#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
 const int pyroOut1 = 2;
 #endif
 #ifdef ALTIDUOESP32
@@ -32,7 +32,7 @@ const int pyroOut2 = PA3;
 #ifdef ALTIMULTIESP32
 const int pyroOut2 = 18;
 #endif
-#ifdef ALTIMULTIESP32_ACCELERO
+#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
 const int pyroOut2 = 18;
 #endif
 #ifdef ALTIDUOESP32
@@ -51,7 +51,7 @@ const int pyroOut3 = 17;
 #ifdef ALTIMULTIESP32
 const int pyroOut3 = 19;
 #endif
-#ifdef ALTIMULTIESP32_ACCELERO
+#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
 const int pyroOut3 = 19;
 #endif
 //pyro out 4
@@ -103,7 +103,7 @@ bool readAltiConfig() {
   #ifdef ALTIMULTIESP32
   EEPROM.begin(512);
   #endif
-  #ifdef ALTIMULTIESP32_ACCELERO
+  #if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
   EEPROM.begin(512);
   #endif
   for ( i = 0; i < sizeof(config); i++ ) {
@@ -112,7 +112,7 @@ bool readAltiConfig() {
   #ifdef ALTIMULTIESP32
   EEPROM.end();
   #endif
-  #ifdef ALTIMULTIESP32_ACCELERO
+  #if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
   EEPROM.end();
   #endif
   if ( config.cksum != CheckSumConf(config) ) {
@@ -260,7 +260,7 @@ void writeConfigStruc()
   #ifdef ALTIMULTIESP32
   EEPROM.begin(512);
   #endif
-  #ifdef ALTIMULTIESP32_ACCELERO
+  #if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
   EEPROM.begin(512);
   #endif
   for ( i = 0; i < sizeof(config); i++ ) {
@@ -270,7 +270,7 @@ void writeConfigStruc()
   EEPROM.commit();
   EEPROM.end();
   #endif
-  #ifdef ALTIMULTIESP32_ACCELERO
+  #if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
   EEPROM.commit();
   EEPROM.end();
   #endif
@@ -380,7 +380,7 @@ void printAltiConfig()
   Serial.print("$");
   Serial.print(altiConfig);
   #endif
-  #ifdef ALTIMULTIESP32_ACCELERO
+  #if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
   Serial.print("$");
   Serial.print(altiConfig);
   #endif

@@ -25,7 +25,7 @@ struct FlightDataStruct {
   long voltage;
   #endif
 
-  #ifdef ALTIMULTIESP32_ACCELERO
+  #if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
   long ADXL375accelX;
   long ADXL375accelY;
   long ADXL375accelZ;
@@ -77,7 +77,7 @@ public:
     #ifdef LOG_VOLTAGE
     void setFlightVoltageData(long voltage);
     #endif
-    #ifdef ALTIMULTIESP32_ACCELERO
+    #if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
     void setADXL375accelX(long accelX);
     void setADXL375accelY(long accelY);
     void setADXL375accelZ(long accelZ);

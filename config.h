@@ -29,10 +29,17 @@
 //#define ALTIMULTISTM32
 
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
-//#define ALTIMULTIESP32
+#define ALTIMULTIESP32
 
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
-#define ALTIMULTIESP32_ACCELERO
+//#define ALTIMULTIESP32_ACCELERO
+
+// if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
+//#define ALTIMULTIESP32_ACCELERO_375
+
+
+// if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
+//#define ALTIMULTIESP32_ACCELERO_345
 
 // if you have the ESP32-C3F AltiDuo board then define ALTIDUOESP32
 //#define ALTIDUOESP32
@@ -59,6 +66,11 @@
 
 ////////////// config changes end here /////////////
 //////////// do not change anything after unless you know what you are doing /////////////////////
+
+#ifdef ALTIMULTIESP32_ACCELERO
+  #define ALTIMULTIESP32_ACCELERO_375
+  #define ALTIMULTIESP32_ACCELERO_345
+#endif
 
 #define MAJOR_VERSION 2
 #define MINOR_VERSION 0
@@ -100,7 +112,7 @@ extern BluetoothSerial SerialBT;
 #define LOG_VOLTAGE
 #endif
 
-#ifdef ALTIMULTIESP32_ACCELERO
+#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
 #define BOARD_FIRMWARE "AltiMultiESP32_accel"
 #define NBR_PYRO_OUT3
 #include "BluetoothSerial.h"

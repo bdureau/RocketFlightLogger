@@ -188,7 +188,7 @@ void logger_I2C_eeprom::setFlightVoltageData( long voltage) {
   _FlightData.voltage = voltage;
 }
 #endif
-#ifdef ALTIMULTIESP32_ACCELERO
+#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
 void logger_I2C_eeprom::setADXL375accelX(long accelX)
 {
   _FlightData.ADXL375accelX = accelX;
@@ -270,7 +270,7 @@ void logger_I2C_eeprom::printFlightData(int flightNbr)
       sprintf(temp, "%i,", _FlightData.voltage );
       strcat(flightData, temp);
 #endif
-#ifdef ALTIMULTIESP32_ACCELERO
+#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
       sprintf(temp, "%i,", _FlightData.ADXL375accelX );
       strcat(flightData, temp);
       sprintf(temp, "%i,", _FlightData.ADXL375accelY );
@@ -289,7 +289,7 @@ void logger_I2C_eeprom::printFlightData(int flightNbr)
       strcat(flightData, temp);
       strcat(flightData, ";\n");
       //#ifdef ALTIMULTIESP32
-      #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO
+      #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
         Serial.print("$");
         Serial.print(flightData);
       #endif

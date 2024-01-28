@@ -2,7 +2,7 @@
 #define _BEEPFUNC_H
 #include "config.h"
 #include "Arduino.h"
-#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO
+#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
 #include <ESP32Tone.h>
 #endif
 #ifdef ALTIDUOESP32
