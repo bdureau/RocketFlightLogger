@@ -39,13 +39,21 @@ You have to load the Arduino Uno boot loader to your ATmega328 micro controller.
 Make sure that you download the [support library](https://github.com/bdureau/AltimetersLibs) for the BMP085 sensor and copy them to the Arduino library folder. To compile it you need to choose the Arduino Uno board and the correct USB port.
 You will need to use a USB/TTL adapter to connect the altimeter to your computer, refer to the documentation.
 you will need to go to the config.h file and uncomment only one of the following compilation directive
+
 #define ALTIMULTI // build code for Altimulti ATMega328 board ver1.0
+
 #define ALTIMULTIV2 // build code for Altimulti ATMega328 board ver2.0
+
 #define ALTIMULTISTM32 // build code for Altimulti STM32 board 
+
 #define ALTIMULTIESP32 // build code for Altimulti ESP32 board
+
 #define ALTIMULTIESP32_ACCELERO // build code for Altimulti ESP32 board with an ADXL345 and an ADXL375 accelerometer
+
 #define ALTIMULTIESP32_ACCELERO_375 // build code for Altimulti ESP32 board with an ADXL375 accelerometer
+
 #define ALTIMULTIESP32_ACCELERO_345 // build code for Altimulti ESP32 board with an ADXL345 accelerometer
+
 
 # Hardware
 You can either build the Altimulti board as a kit or use an Arduino Uno/Nano/pro and make a shield. You can also use 3 different type of pressure sensors: BMP085, BMP180 or BMP280. To use the BMP280 sensor, you will need to download the appropriate support library and enable/disable some compilation directives.
