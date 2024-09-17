@@ -10,11 +10,12 @@ const int pyroOut1 = 9;
 #ifdef ALTIMULTI
 const int pyroOut1 = 9;
 #endif
-#ifdef ALTIMULTIESP32
+/*#ifdef ALTIMULTIESP32
 const int pyroOut1 = 2;
-#endif
-#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
-const int pyroOut1 = 2;
+#endif*/
+#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+//const int pyroOut1 = 2;
+const int pyroOut1 = 18;
 #endif
 #ifdef ALTIDUOESP32
 const int pyroOut1 = -1;
@@ -29,11 +30,12 @@ const int pyroOut2 = 13;
 #ifdef ALTIMULTISTM32
 const int pyroOut2 = PA3;
 #endif
-#ifdef ALTIMULTIESP32
+/*#ifdef ALTIMULTIESP32
 const int pyroOut2 = 18;
-#endif
-#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
-const int pyroOut2 = 18;
+#endif*/
+#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+//const int pyroOut2 = 18;
+const int pyroOut2 = 2;
 #endif
 #ifdef ALTIDUOESP32
 const int pyroOut2 = -1;
@@ -48,11 +50,12 @@ const int pyroOut3 = 17;
 #ifdef ALTIMULTIV2
 const int pyroOut3 = 17;
 #endif
-#ifdef ALTIMULTIESP32
+/*#ifdef ALTIMULTIESP32
 const int pyroOut3 = 19;
-#endif
-#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+#endif*/
+#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
 const int pyroOut3 = 19;
+
 #endif
 //pyro out 4
 #ifdef ALTIMULTISTM32
@@ -376,11 +379,12 @@ void printAltiConfig()
   sprintf(temp, "%i;\n", chk);
   strcat(altiConfig, temp);
 
-  #ifdef ALTIMULTIESP32
+  /*#ifdef ALTIMULTIESP32
   Serial.print("$");
   Serial.print(altiConfig);
-  #endif
-  #if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+  #endif*/
+  #ifdef TELEMETRY_ESP32
+  //#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
   Serial.print("$");
   Serial.print(altiConfig);
   #endif

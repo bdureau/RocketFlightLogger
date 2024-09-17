@@ -29,10 +29,10 @@
 //#define ALTIMULTISTM32
 
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
-//#define ALTIMULTIESP32
+#define ALTIMULTIESP32
 
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
-#define ALTIMULTIESP32_ACCELERO
+//#define ALTIMULTIESP32_ACCELERO
 
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
 //#define ALTIMULTIESP32_ACCELERO_375
@@ -104,6 +104,7 @@
 
 #ifdef ALTIMULTIESP32
 #define BOARD_FIRMWARE "AltiMultiESP32"
+#define TELEMETRY_ESP32
 #define NBR_PYRO_OUT3
 #include "BluetoothSerial.h"
 extern BluetoothSerial SerialBT;
@@ -113,6 +114,7 @@ extern BluetoothSerial SerialBT;
 #endif
 
 #if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+#define TELEMETRY_ESP32
 #define NBR_PYRO_OUT3
 #include "BluetoothSerial.h"
 extern BluetoothSerial SerialBT;
