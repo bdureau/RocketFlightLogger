@@ -5,16 +5,12 @@
 const int pyroOut1 = PA1;
 #endif
 #ifdef ALTIMULTIV2
-const int pyroOut1 = 9;  
+const int pyroOut1 = 9;
 #endif
 #ifdef ALTIMULTI
 const int pyroOut1 = 9;
 #endif
-/*#ifdef ALTIMULTIESP32
-const int pyroOut1 = 2;
-#endif*/
 #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
-//const int pyroOut1 = 2;
 const int pyroOut1 = 18;
 #endif
 #ifdef ALTIDUOESP32
@@ -22,7 +18,7 @@ const int pyroOut1 = -1;
 #endif
 //pyro out 2
 #ifdef ALTIMULTIV2
-const int pyroOut2 = 12;  
+const int pyroOut2 = 12;
 #endif
 #ifdef ALTIMULTI
 const int pyroOut2 = 13;
@@ -30,11 +26,7 @@ const int pyroOut2 = 13;
 #ifdef ALTIMULTISTM32
 const int pyroOut2 = PA3;
 #endif
-/*#ifdef ALTIMULTIESP32
-const int pyroOut2 = 18;
-#endif*/
 #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
-//const int pyroOut2 = 18;
 const int pyroOut2 = 2;
 #endif
 #ifdef ALTIDUOESP32
@@ -42,7 +34,7 @@ const int pyroOut2 = -1;
 #endif
 //pyro out 3
 #ifdef ALTIMULTISTM32
-const int pyroOut3 = PA5; 
+const int pyroOut3 = PA5;
 #endif
 #ifdef ALTIMULTI
 const int pyroOut3 = 17;
@@ -50,12 +42,8 @@ const int pyroOut3 = 17;
 #ifdef ALTIMULTIV2
 const int pyroOut3 = 17;
 #endif
-/*#ifdef ALTIMULTIESP32
-const int pyroOut3 = 19;
-#endif*/
 #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
 const int pyroOut3 = 19;
-
 #endif
 //pyro out 4
 #ifdef ALTIMULTISTM32
@@ -95,7 +83,7 @@ void defaultConfig()
   config.batteryType = 0;
   config.recordingTimeout = 120;
   config.altiID = 0;
-  config.useTelemetryPort =0;
+  config.useTelemetryPort = 0;
   config.cksum = CheckSumConf(config);
 }
 
@@ -103,21 +91,21 @@ bool readAltiConfig() {
   //set the config to default values so that if any have not been configured we can use the default ones
   defaultConfig();
   int i;
-  #ifdef ALTIMULTIESP32
+#ifdef ALTIMULTIESP32
   EEPROM.begin(512);
-  #endif
-  #if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+#endif
+#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
   EEPROM.begin(512);
-  #endif
+#endif
   for ( i = 0; i < sizeof(config); i++ ) {
     *((char*)&config + i) = EEPROM.read(CONFIG_START + i);
   }
-  #ifdef ALTIMULTIESP32
+#ifdef ALTIMULTIESP32
   EEPROM.end();
-  #endif
-  #if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+#endif
+#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
   EEPROM.end();
-  #endif
+#endif
   if ( config.cksum != CheckSumConf(config) ) {
     return false;
   }
@@ -136,8 +124,8 @@ bool writeAltiConfigV2( char *p ) {
 
   char *str;
   int i = 0;
-  int command =0;
-  long commandVal =0;
+  int command = 0;
+  long commandVal = 0;
   int strChk = 0;
   char msg[100] = "";
 
@@ -153,99 +141,99 @@ bool writeAltiConfigV2( char *p ) {
       strcat(msg, str);
     }
     if (i == 3) {
-      strChk  =  atoi(str);  
+      strChk  =  atoi(str);
     }
     i++;
 
   }
-    //we have a partial config
+  //we have a partial config
   if (i < 4)
     return false;
-  //checksum is ivalid ? 
+  //checksum is ivalid ?
   if (msgChk(msg, sizeof(msg)) != strChk)
-    return false;  
-    
+    return false;
+
   switch (command)
-    {
-      case 1:
-        config.unit = (int) commandVal;
-        break;
-      case 2:
-        config.beepingMode = (int) commandVal;
-        break;
-      case 3:
-        config.outPut1 = (int) commandVal;
-        break;
-      case 4:
-        config.outPut2 = (int) commandVal;
-        break;
-      case 5:
-        config.outPut3 = (int) commandVal;
-        break;
-      case 6:
-        config.mainAltitude = (int) commandVal;
-        break;
-      case 7:
-        config.superSonicYesNo = (int)commandVal;
-        break;
-      case 8:
-        config.outPut1Delay = (int)commandVal;
-        break;
-      case 9:
-        config.outPut2Delay = (int)commandVal;
-        break;
-      case 10:
-        config.outPut3Delay = (int)commandVal;
-        break;
-      case 11:
-        config.beepingFrequency = (int)commandVal;
-        break;
-      case 12:
-        config.nbrOfMeasuresForApogee =(int) commandVal;
-        break;
-      case 13:
-        config.endRecordAltitude = (int)commandVal;
-        break;
-      case 14:
-        config.telemetryType = (int)commandVal;
-        break;
-      case 15:
-        config.superSonicDelay =(int)commandVal;
-        break;
-      case 16:
-        config.connectionSpeed = commandVal;
-        break;
-      case 17:
-        config.altimeterResolution = (int)commandVal;
-        break;
-      case 18:
-        config.eepromSize = (int)commandVal;
-        break;
-      case 19:
-        config.noContinuity = (int)commandVal;
-        break;
-      case 20:
-        config.outPut4 = (int)commandVal;
-        break;
-      case 21:
-        config.outPut4Delay = (int)commandVal;
-        break;
-      case 22:
-        config.liftOffAltitude = (int)commandVal;
-        break;
-      case 23:
-        config.batteryType = (int)commandVal;
-        break;
-      case 24:
-        config.recordingTimeout = (int)commandVal;
-        break;
-      case 25:
-        config.altiID = (int)commandVal;
-        break;
-      case 26:
-        config.useTelemetryPort = (int)commandVal;  
-        break;  
-    }
+  {
+    case 1:
+      config.unit = (int) commandVal;
+      break;
+    case 2:
+      config.beepingMode = (int) commandVal;
+      break;
+    case 3:
+      config.outPut1 = (int) commandVal;
+      break;
+    case 4:
+      config.outPut2 = (int) commandVal;
+      break;
+    case 5:
+      config.outPut3 = (int) commandVal;
+      break;
+    case 6:
+      config.mainAltitude = (int) commandVal;
+      break;
+    case 7:
+      config.superSonicYesNo = (int)commandVal;
+      break;
+    case 8:
+      config.outPut1Delay = (int)commandVal;
+      break;
+    case 9:
+      config.outPut2Delay = (int)commandVal;
+      break;
+    case 10:
+      config.outPut3Delay = (int)commandVal;
+      break;
+    case 11:
+      config.beepingFrequency = (int)commandVal;
+      break;
+    case 12:
+      config.nbrOfMeasuresForApogee = (int) commandVal;
+      break;
+    case 13:
+      config.endRecordAltitude = (int)commandVal;
+      break;
+    case 14:
+      config.telemetryType = (int)commandVal;
+      break;
+    case 15:
+      config.superSonicDelay = (int)commandVal;
+      break;
+    case 16:
+      config.connectionSpeed = commandVal;
+      break;
+    case 17:
+      config.altimeterResolution = (int)commandVal;
+      break;
+    case 18:
+      config.eepromSize = (int)commandVal;
+      break;
+    case 19:
+      config.noContinuity = (int)commandVal;
+      break;
+    case 20:
+      config.outPut4 = (int)commandVal;
+      break;
+    case 21:
+      config.outPut4Delay = (int)commandVal;
+      break;
+    case 22:
+      config.liftOffAltitude = (int)commandVal;
+      break;
+    case 23:
+      config.batteryType = (int)commandVal;
+      break;
+    case 24:
+      config.recordingTimeout = (int)commandVal;
+      break;
+    case 25:
+      config.altiID = (int)commandVal;
+      break;
+    case 26:
+      config.useTelemetryPort = (int)commandVal;
+      break;
+  }
 
   // add checksum
   config.cksum = CheckSumConf(config);
@@ -260,23 +248,23 @@ bool writeAltiConfigV2( char *p ) {
 void writeConfigStruc()
 {
   int i;
-  #ifdef ALTIMULTIESP32
+#ifdef ALTIMULTIESP32
   EEPROM.begin(512);
-  #endif
-  #if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+#endif
+#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
   EEPROM.begin(512);
-  #endif
+#endif
   for ( i = 0; i < sizeof(config); i++ ) {
     EEPROM.write(CONFIG_START + i, *((char*)&config + i));
   }
-  #ifdef ALTIMULTIESP32
+#ifdef ALTIMULTIESP32
   EEPROM.commit();
   EEPROM.end();
-  #endif
-  #if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+#endif
+#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
   EEPROM.commit();
   EEPROM.end();
-  #endif
+#endif
 }
 /*
 
@@ -286,15 +274,20 @@ void writeConfigStruc()
 void printAltiConfig(char *altiName)
 {
   // char *altiConfig;
- // altiConfig = (char *) malloc(120);
+  // altiConfig = (char *) malloc(120);
+  #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+  char altiConfig[160] = "";
+  #else
   char altiConfig[120] = "";
+  #endif
+  
   char temp[25] = "";
   bool ret = readAltiConfig();
   if (!ret)
     SerialCom.print(F("invalid conf"));
 
   strcat(altiConfig, "alticonfig,");
-  
+
   //Unit
   sprintf(temp, "%i,", config.unit);
   strcat(altiConfig, temp);
@@ -318,7 +311,7 @@ void printAltiConfig(char *altiName)
   strcat(altiConfig, temp);
   //AltimeterName
   strcat(altiConfig, BOARD_FIRMWARE);
-   strcat(altiConfig,",");
+  strcat(altiConfig, ",");
   //alti major version
   sprintf(temp, "%i,", MAJOR_VERSION);
   strcat(altiConfig, temp);
@@ -374,43 +367,40 @@ void printAltiConfig(char *altiName)
   //useTelemetryPort
   sprintf(temp, "%i,", config.useTelemetryPort);
   strcat(altiConfig, temp);
-  #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
   //strcpy(temp, altiName);
-  sprintf(temp, "%s,",altiName);
-  strcat(altiConfig,temp);
-  #endif
+  //SerialCom.println(altiName);
+  sprintf(temp, "%s,", altiName);
+  strcat(altiConfig, temp);
+#endif
   unsigned int chk = 0;
   chk = msgChk( altiConfig, sizeof(altiConfig) );
   sprintf(temp, "%i;\n", chk);
   strcat(altiConfig, temp);
 
   /*#ifdef ALTIMULTIESP32
-  Serial.print("$");
-  Serial.print(altiConfig);
-  #endif*/
-  #ifdef TELEMETRY_ESP32
+    Serial.print("$");
+    Serial.print(altiConfig);
+    #endif*/
+#ifdef TELEMETRY_ESP32
   //#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
   Serial.print("$");
   Serial.print(altiConfig);
-  #endif
+#endif
   SerialCom.print("$");
   //SerialCom.print(altiConfig);
   // the following will slow down the connection speed so that it works better with telemetry module
   // or bluetooth module with no buffer
-  if (config.useTelemetryPort == 1){
-  for(int j=0; j< sizeof(altiConfig);j++) {
-    SerialCom.print(altiConfig[j]);
-    delay(2);
+  if (config.useTelemetryPort == 1) {
+    for (int j = 0; j < sizeof(altiConfig); j++) {
+      SerialCom.print(altiConfig[j]);
+      delay(2);
+    }
   }
-  } 
   else
     SerialCom.print(altiConfig);
-  
-  
-  
-  
 
-//free(altiConfig);
+  //free(altiConfig);
 }
 bool CheckValideBaudRate(long baudRate)
 {

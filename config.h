@@ -13,7 +13,6 @@
  * 
  */
 
-//#include <Stream.h>
 
 /////////////// config changes start here ///////////
 // here choose one of the board that you want to use
@@ -29,7 +28,7 @@
 //#define ALTIMULTISTM32
 
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
-#define ALTIMULTIESP32
+//#define ALTIMULTIESP32
 
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
 //#define ALTIMULTIESP32_ACCELERO
@@ -37,9 +36,8 @@
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
 //#define ALTIMULTIESP32_ACCELERO_375
 
-
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
-//#define ALTIMULTIESP32_ACCELERO_345
+#define ALTIMULTIESP32_ACCELERO_345
 
 // if you have the ESP32-C3F AltiDuo board then define ALTIDUOESP32
 //#define ALTIDUOESP32

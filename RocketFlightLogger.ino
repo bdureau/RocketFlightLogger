@@ -483,7 +483,7 @@ void setup()
   //and change it to 57600, 115200 etc..
   Serial.begin(38400);
   char bluetoothName [21];
-  preferences.begin("namespace", false); 
+  preferences.begin("namespace", false);
   //sprintf(altiName, "ESP32Rocket%i", (int)config.altiID );
   sprintf(bluetoothName, "%s", preferences.getString("Name", "ESP32Rocket"));
   preferences.end();
@@ -493,7 +493,7 @@ void setup()
   Serial.begin(38400);
   char bluetoothName [21];
   //sprintf(altiName, "ESP32Accel%i", (int)config.altiID );
-  preferences.begin("namespace", false); 
+  preferences.begin("namespace", false);
   sprintf(bluetoothName, "%s", preferences.getString("Name", "ESP32Accel"));
   preferences.end();
   SerialCom.begin(bluetoothName);
@@ -502,7 +502,7 @@ void setup()
   Serial.begin(38400);
   char bluetoothName [21];
   //sprintf(altiName, "ESP32A375_%i", (int)config.altiID );
-  preferences.begin("namespace", false); 
+  preferences.begin("namespace", false);
   sprintf(bluetoothName, "%s", preferences.getString("Name", "ESP32A375"));
   preferences.end();
   SerialCom.begin(bluetoothName);
@@ -511,7 +511,7 @@ void setup()
   Serial.begin(38400);
   char bluetoothName [21];
   //sprintf(altiName, "ESP32A345_%i", (int)config.altiID );
-  preferences.begin("namespace", false); 
+  preferences.begin("namespace", false);
   sprintf(bluetoothName, "%s", preferences.getString("Name", "ESP32A345"));
   preferences.end();
   SerialCom.begin(bluetoothName);
@@ -1667,11 +1667,16 @@ void interpretCommandBuffer(char *commandbuffer) {
 #endif
     SerialCom.print(F("$start;\n"));
 #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
-    char altiName [15];
+    unsigned char bluetoothName [21];
     preferences.begin("namespace", false);
-    sprintf(altiName, "%s", preferences.getString("Name", "ESP32Rocket"));
+    
+    String btName = "";
+    btName = preferences.getString("Name", "ESP32Rocket");
     preferences.end();
-    printAltiConfig(altiName);
+
+    btName.getBytes(bluetoothName,btName.length()+1);
+    
+    printAltiConfig((char *)bluetoothName);
 #else
     printAltiConfig("");
 #endif
@@ -1700,6 +1705,11 @@ void interpretCommandBuffer(char *commandbuffer) {
   {
     defaultConfig();
     writeConfigStruc();
+    #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+    preferences.begin("namespace", false);
+    preferences.putString("Name", "ESP32Rocket");
+    preferences.end();
+    #endif
     initAlti();
   }
   //this will erase all flight
@@ -1941,8 +1951,21 @@ void interpretCommandBuffer(char *commandbuffer) {
     //reset config
     defaultConfig();
     writeConfigStruc();
+    #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+    preferences.begin("namespace", false);
+    preferences.putString("Name", "ESP32Rocket");
+    preferences.end();
+    #endif
     initAlti();
     SerialCom.print(F("config reseted\n"));
+  }
+  else if (commandbuffer[0] == 'v')
+  {
+    #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+    preferences.begin("namespace", false);
+    SerialCom.println(preferences.getString("Name", "ESP32Rocket"));
+    preferences.end();
+    #endif
   }
   // Recording
   else if (commandbuffer[0] == 'w')
@@ -2194,10 +2217,13 @@ void updateAltiName(char *commandbuffer) {
 
   for (i = 2; i < strlen(temp); i++)
   {
-    if (temp[i] == ',')
+    if (temp[i] == ','){
+      altiName[i - 2] = '\0';
       break;
+    }
     altiName[i - 2] = temp[i];
   }
+  
   preferences.begin("namespace", false);
   preferences.putString("Name", altiName);
   preferences.end();
