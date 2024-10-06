@@ -57,6 +57,9 @@
 //#define SERIAL_DEBUG
 #undef SERIAL_DEBUG
 
+
+
+
 #define BAT_MIN_VOLTAGE 7.0
 //Voltage divider
 #define R1 4.7
@@ -73,7 +76,7 @@
 #endif*/
 
 #define MAJOR_VERSION 2
-#define MINOR_VERSION 0
+#define MINOR_VERSION 1
 #define BUILD 1
 #define CONFIG_START 32
 
@@ -205,7 +208,7 @@ extern bool readAltiConfig();
 extern int getOutPin(int );
 //extern bool writeAltiConfig( char * );
 extern bool writeAltiConfigV2( char * );
-extern void printAltiConfig();
+extern void printAltiConfig( char *);
 extern void writeConfigStruc();
 extern bool CheckValideBaudRate(long);
 extern unsigned int CheckSumConf( ConfigStruct );

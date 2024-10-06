@@ -123,6 +123,9 @@
 
   Major changes on version 2.0
   Adding accelerometers
+
+  Major changes on version 2.1
+  Allow renaming of the bluetooth for the ESP32
 */
 
 //altimeter configuration lib
@@ -160,6 +163,11 @@ Adafruit_ADXL375 accel375 = Adafruit_ADXL375(0x1D); //def
 #if defined ALTIMULTIESP32_ACCELERO_345 || defined ALTIMULTIESP32_ACCELERO
 #include <Adafruit_ADXL345_U.h>
 Adafruit_ADXL345_Unified accel345 = Adafruit_ADXL345_Unified();
+#endif
+
+#if defined ALTIDUOESP32 || defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+#include <Preferences.h>
+Preferences preferences;
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -470,57 +478,49 @@ void setup()
   // initialise the connection
   Wire.begin();
 
+#if defined ALTIMULTIESP32
   //You can change the baud rate here
   //and change it to 57600, 115200 etc..
-  //Serial.begin(BAUD_RATE);
-#if defined ALTIMULTIESP32
-  /*#ifdef ESP32_NOBT
-    SerialCom.begin(38400);
-    #else*/
   Serial.begin(38400);
-  char altiName [15];
-  sprintf(altiName, "ESP32Rocket%i", (int)config.altiID );
-  SerialCom.begin(altiName);
-  //#endif
+  char bluetoothName [21];
+  preferences.begin("namespace", false); 
+  //sprintf(altiName, "ESP32Rocket%i", (int)config.altiID );
+  sprintf(bluetoothName, "%s", preferences.getString("Name", "ESP32Rocket"));
+  preferences.end();
+  SerialCom.begin(bluetoothName);
 
 #elif defined(ALTIMULTIESP32_ACCELERO)
-  /*#ifdef ESP32_NOBT
-    SerialCom.begin(38400);
-  #else*/
   Serial.begin(38400);
-  char altiName [15];
-  sprintf(altiName, "ESP32Accel%i", (int)config.altiID );
-  SerialCom.begin(altiName);
-  //#endif
+  char bluetoothName [21];
+  //sprintf(altiName, "ESP32Accel%i", (int)config.altiID );
+  preferences.begin("namespace", false); 
+  sprintf(bluetoothName, "%s", preferences.getString("Name", "ESP32Accel"));
+  preferences.end();
+  SerialCom.begin(bluetoothName);
 
 #elif defined(ALTIMULTIESP32_ACCELERO_375)
-  /*#ifdef ESP32_NOBT
-    SerialCom.begin(38400);
-  #else*/
   Serial.begin(38400);
-  char altiName [15];
-  sprintf(altiName, "ESP32A375_%i", (int)config.altiID );
-  SerialCom.begin(altiName);
-  //#endif
+  char bluetoothName [21];
+  //sprintf(altiName, "ESP32A375_%i", (int)config.altiID );
+  preferences.begin("namespace", false); 
+  sprintf(bluetoothName, "%s", preferences.getString("Name", "ESP32A375"));
+  preferences.end();
+  SerialCom.begin(bluetoothName);
 
 #elif defined(ALTIMULTIESP32_ACCELERO_345)
-  /*#ifdef ESP32_NOBT
-    SerialCom.begin(38400);
-  #else*/
   Serial.begin(38400);
-  char altiName [15];
-  sprintf(altiName, "ESP32A345_%i", (int)config.altiID );
-  SerialCom.begin(altiName);
-  //#endif
+  char bluetoothName [21];
+  //sprintf(altiName, "ESP32A345_%i", (int)config.altiID );
+  preferences.begin("namespace", false); 
+  sprintf(bluetoothName, "%s", preferences.getString("Name", "ESP32A345"));
+  preferences.end();
+  SerialCom.begin(bluetoothName);
+
 #elif defined(ALTIDUOESP32)
-  /*#ifdef ESP32_NOBT
-    SerialCom.begin(38400);
-  #else*/
   Serial.begin(38400);
-  char altiName [15];
+  char altiName [21];
   sprintf(altiName, "ESP32Rocket%i", (int)config.altiID );
   SerialCom.begin(altiName);
-  //#endif
 #else
   SerialCom.begin(config.connectionSpeed);
 #endif
@@ -532,8 +532,6 @@ void setup()
   {
     //There was a problem detecting the ADXL375 ... check your connections
     Serial.println("Ooops, no ADXL375 detected ... Check your wiring!");
-    // while (1);
-
   }
 #endif
 
@@ -614,7 +612,7 @@ void setup()
       delay(500);
       longBeep();
       delay(500);
-      }
+    }
   }
 #endif
 
@@ -1668,8 +1666,15 @@ void interpretCommandBuffer(char *commandbuffer) {
     Serial.print(F("$start;\n"));
 #endif
     SerialCom.print(F("$start;\n"));
-
-    printAltiConfig();
+#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+    char altiName [15];
+    preferences.begin("namespace", false);
+    sprintf(altiName, "%s", preferences.getString("Name", "ESP32Rocket"));
+    preferences.end();
+    printAltiConfig(altiName);
+#else
+    printAltiConfig("");
+#endif
 #ifdef TELEMETRY_ESP32
     //#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
     Serial.print(F("$end;\n"));
@@ -1981,8 +1986,16 @@ void interpretCommandBuffer(char *commandbuffer) {
 #endif
     SerialCom.print(F("$OK;\n"));
   }
-
-
+  //alti Name for ESP32
+  else if (commandbuffer[0] == 'z')
+  {
+    updateAltiName(commandbuffer);
+#ifdef TELEMETRY_ESP32
+    //#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+    Serial.print(F("$OK;\n"));
+#endif
+    SerialCom.print(F("$OK;\n"));
+  }
   // empty command
   else if (commandbuffer[0] == ' ')
   {
@@ -2171,3 +2184,22 @@ void sendTestTram() {
   SerialCom.print("$");
   SerialCom.print(altiTest);
 }
+
+#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+void updateAltiName(char *commandbuffer) {
+  int i;
+  char temp[25];
+  char altiName[21];
+  strcpy(temp, commandbuffer);
+
+  for (i = 2; i < strlen(temp); i++)
+  {
+    if (temp[i] == ',')
+      break;
+    altiName[i - 2] = temp[i];
+  }
+  preferences.begin("namespace", false);
+  preferences.putString("Name", altiName);
+  preferences.end();
+}
+#endif

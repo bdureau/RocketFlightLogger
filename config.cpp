@@ -283,12 +283,12 @@ void writeConfigStruc()
    Print altimeter config to the Serial line
 
 */
-void printAltiConfig()
+void printAltiConfig(char *altiName)
 {
   // char *altiConfig;
  // altiConfig = (char *) malloc(120);
   char altiConfig[120] = "";
-  char temp[10] = "";
+  char temp[25] = "";
   bool ret = readAltiConfig();
   if (!ret)
     SerialCom.print(F("invalid conf"));
@@ -374,6 +374,11 @@ void printAltiConfig()
   //useTelemetryPort
   sprintf(temp, "%i,", config.useTelemetryPort);
   strcat(altiConfig, temp);
+  #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+  //strcpy(temp, altiName);
+  sprintf(temp, "%s,",altiName);
+  strcat(altiConfig,temp);
+  #endif
   unsigned int chk = 0;
   chk = msgChk( altiConfig, sizeof(altiConfig) );
   sprintf(temp, "%i;\n", chk);
