@@ -1,5 +1,5 @@
 # Rocket Flight logger: AltiMulti, AltiMultiV2, AltiMultiSTM32 or  AltiMultiESP32 (firmware)
-This project is part of a complete rocket flight computer. Depending on the board that you have it has 3 or 4 pyro outputs that can be used for the main, the appoge or just simple timers. It has an eeprom that can record up to 25 flights. Those flights can then be read on the PC, Mac or Linux using the Arduino IDE serial port monitor.
+This project is part of a complete rocket flight computer. Depending on the board that you have it has 2, 3 or 4 pyro outputs that can be used for the main, the appoge or just simple timers. It has an eeprom that can record up to 25 flights. Those flights can then be read on the PC, Mac or Linux using the Arduino IDE serial port monitor.
 I am also working on a Java interface and an Android application that can plot the flight and configure the altimeter.                  
 
 <img src="/pictures/altimulti.JPG" width="49%">  
