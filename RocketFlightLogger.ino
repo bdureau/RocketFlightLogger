@@ -1,6 +1,6 @@
 /*
-  Rocket Flight Logger ver 2.0
-  Copyright Boris du Reau 2012-2024
+  Rocket Flight Logger ver 2.2
+  Copyright Boris du Reau 2012-2025
 
   The following is a datalogger for logging rocket flight.
   So far it can log the rocket altitude during the flight.
@@ -8,7 +8,7 @@
 
 
   This is using a BMP085 or BMP180 presure sensor and an Atmega 328 or an STM32
-  The compatible boards are Altimulti, AltimultiV2 and AltiMultiSTM32. To complile the
+  The compatible boards are Altimulti, AltimultiV2, AltiMultiSTM32, AltiMultiESP32 and AltiMultiESP32_accelero. To complile the
   firmware to the various board go to the config.h file and select one of the
   following compilation directive
   #define ALTIMULTI
@@ -22,6 +22,7 @@
   Then on your Arduino environment select the appropriate boards:
   Arduino Uno => AltiMulti and AltiMultiV2
   Generic STM32F103C series => AltimultiSTM32
+  ESP32 Dev module => AltiMultiESP32 and AltiMultiESP32_accelero
 
   The following record the flight (altitude, temperature, pressure) in an EEPROM.
   Note that internally the altimeter is working is metric, for conveniance the beeping
@@ -126,6 +127,9 @@
 
   Major changes on version 2.1
   Allow renaming of the bluetooth for the ESP32
+
+  Major changes on version 2.2
+  Bugs fixes
 */
 
 //altimeter configuration lib
@@ -136,10 +140,7 @@
 #include "Bear_BMP085.h"
 #endif
 
-/*#ifdef BMP_180
-  #include <BMP180.h>
-  #endif*/
-#ifdef BMP280
+#ifdef BMP280_sensor
 #include <BMP280.h>
 #define P0 1013.25
 #endif
@@ -175,13 +176,9 @@ Preferences preferences;
 //////////////////////////////////////////////////////////////////////
 
 #ifdef BMP085_180
-//Adafruit_BMP085 bmp;
 BMP085 bmp;
 #endif
-/*#ifdef BMP_180
-  BMP180 bmp;
-  #endif*/
-#ifdef BMP280
+#ifdef BMP280_sensor
 BMP280 bmp;
 #endif
 
@@ -278,9 +275,11 @@ const int pinChannel3Continuity = 16;
 
 #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
 //by default apogee pin
-const int pinChannel1Continuity = 5;
+//const int pinChannel1Continuity = 5;
+const int pinChannel1Continuity = 17;
 // by default continuity for the main
-const int pinChannel2Continuity = 17;
+//const int pinChannel2Continuity = 17;
+const int pinChannel2Continuity = 5;
 // third output
 const int pinChannel3Continuity = 23;
 #endif
@@ -336,7 +335,7 @@ float ReadAltitude()
 
 
 
-#ifdef BMP280
+#ifdef BMP280_sensor
 /*
 
    Read Altitude function for a BMP280 Bosch sensor
@@ -616,9 +615,9 @@ void setup()
   }
 #endif
 
-#ifdef BMP280
+#ifdef BMP280_sensor
   bmp.begin();
-  bmp.setOversampling(config.altimeterResolution)
+  bmp.setOversampling(config.altimeterResolution);
 #endif
 
 
@@ -918,14 +917,23 @@ void SendTelemetry(long sampleTime, int freq) {
 #endif
 #endif
     // temperature
-    float temperature;
+    
 #ifdef BMP085_180
+    float temperature;
     temperature = bmp.readTemperature();
+    sprintf(temp, "%i,", (int)temperature );
 #endif
 #ifdef BMP_180
+    float temperature;
     temperature = bmp.GetTemperature();
-#endif
     sprintf(temp, "%i,", (int)temperature );
+#endif
+#ifdef BMP280_sensor
+    double temperature, pressure;
+    bmp.getTemperatureAndPressure(temperature, pressure);
+    sprintf(temp, "%i,", (int)temperature );
+#endif
+    
     strcat(altiTelem, temp);
 
     sprintf(temp, "%i,", (int)(100 * ((float)logger.getLastFlightEndAddress() / endAddress)) );
@@ -1238,8 +1246,17 @@ void recordAltitude()
       {
         logger.setFlightTimeData( diffTime);
         logger.setFlightAltitudeData(currAltitude);
+        #ifdef BMP085_180
         logger.setFlightTemperatureData((long) bmp.readTemperature());
         logger.setFlightPressureData((long) bmp.readPressure());
+        #endif
+        #ifdef BMP280_sensor
+        double temperature, pressure;
+        bmp.getTemperatureAndPressure(temperature, pressure);
+        logger.setFlightTemperatureData((long) temperature);
+        logger.setFlightPressureData((long) pressure);
+        #endif
+    
 #ifdef LOG_VOLTAGE
 
 #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
@@ -2012,7 +2029,9 @@ void interpretCommandBuffer(char *commandbuffer) {
   //alti Name for ESP32
   else if (commandbuffer[0] == 'z')
   {
+    #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
     updateAltiName(commandbuffer);
+    #endif
 #ifdef TELEMETRY_ESP32
     //#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
     Serial.print(F("$OK;\n"));
