@@ -18,7 +18,6 @@ const int pinSpeaker = PA0;
 #endif
 
 #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
-//#include <ESP32Tone.h>
 const int pinSpeaker = 16;
 #endif
 

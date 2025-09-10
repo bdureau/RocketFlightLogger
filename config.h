@@ -22,22 +22,33 @@
 
 // if you have a modified ALTIMULTI board using an ATMega328 using different Arduino pins for the
 // pyro output so that they do not fire following a reset of the board then define ALTIMULTIV2
+// select Arduino Uno board to compile it
 //#define ALTIMULTIV2
 
 // if you have the STM32 shield then define ALTIMULTISTM32
-//#define ALTIMULTISTM32
+//  Compiling the firmware:
+//  You will need to download the following core
+//  https://github.com/rogerclarkmelbourne/Arduino_STM32/wiki/Installation
+//  and follow all instructions
+//  version 1.6.12 of the core M3 need to be install
+//  Choose "Generic STM32F103C board" to compile
+#define ALTIMULTISTM32
 
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
+// choose the Wroom board to compile it
 //#define ALTIMULTIESP32
 
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
+// choose the Wroom board to compile it
 //#define ALTIMULTIESP32_ACCELERO
 
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
+// choose the Wroom board to compile it
 //#define ALTIMULTIESP32_ACCELERO_375
 
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
-#define ALTIMULTIESP32_ACCELERO_345
+// choose the Wroom board to compile it
+//#define ALTIMULTIESP32_ACCELERO_345
 
 // if you have the ESP32-C3F AltiDuo board then define ALTIDUOESP32
 //#define ALTIDUOESP32
@@ -49,14 +60,11 @@
 
 //#define BMP_180
 // if you have a custom ATMega 328 board using a BMP280 pressure sensor 
-//#define BMP280
+//#define BMP280_sensor
 
 // If you want to have additionnal debugging uncomment it
 //#define SERIAL_DEBUG
 #undef SERIAL_DEBUG
-
-
-
 
 #define BAT_MIN_VOLTAGE 7.0
 //Voltage divider
@@ -68,13 +76,8 @@
 ////////////// config changes end here /////////////
 //////////// do not change anything after unless you know what you are doing /////////////////////
 
-/*#ifdef ALTIMULTIESP32_ACCELERO
-  #define ALTIMULTIESP32_ACCELERO_375
-  #define ALTIMULTIESP32_ACCELERO_345
-#endif*/
-
 #define MAJOR_VERSION 2
-#define MINOR_VERSION 1
+#define MINOR_VERSION 2
 #define BUILD 1
 #define CONFIG_START 32
 
