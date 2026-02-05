@@ -309,6 +309,80 @@ void logger_I2C_eeprom::printFlightData(int flightNbr)
     }
   }
 }
+
+void logger_I2C_eeprom::recoverFlightData(int nbrOfSamples)
+{
+  unsigned long startaddress;
+  unsigned long endaddress;
+
+  startaddress = 201;//getFlightStart(flightNbr);
+  endaddress = sizeof(_FlightData)*nbrOfSamples; // getFlightStop(flightNbr);
+
+  if (startaddress > 200)
+  {
+    unsigned long i = startaddress;
+    unsigned long currentTime = 0;
+
+    while (i < (endaddress + 1))
+    {
+      i = readFlight(i) + 1;
+      char flightData[120] = "";
+      char temp[20] = "";
+      currentTime = currentTime + getFlightTimeData();
+      strcat(flightData, "data,");
+      sprintf(temp, "%i,", 1 );
+      strcat(flightData, temp);
+      sprintf(temp, "%i,", currentTime );
+      strcat(flightData, temp);
+      sprintf(temp, "%i,", getFlightAltitudeData() );
+      strcat(flightData, temp);
+      sprintf(temp, "%i,", _FlightData.temperature );
+      strcat(flightData, temp);
+      sprintf(temp, "%i,", _FlightData.pressure );
+      strcat(flightData, temp);
+#ifdef LOG_VOLTAGE
+      sprintf(temp, "%i,", _FlightData.voltage );
+      strcat(flightData, temp);
+#endif
+#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+      sprintf(temp, "%i,", _FlightData.ADXL375accelX );
+      strcat(flightData, temp);
+      sprintf(temp, "%i,", _FlightData.ADXL375accelY );
+      strcat(flightData, temp);
+      sprintf(temp, "%i,", _FlightData.ADXL375accelZ );
+      strcat(flightData, temp);
+      sprintf(temp, "%i,", _FlightData.ADXL345accelX );
+      strcat(flightData, temp);
+      sprintf(temp, "%i,", _FlightData.ADXL345accelY );
+      strcat(flightData, temp);
+      sprintf(temp, "%i,", _FlightData.ADXL345accelZ );
+      strcat(flightData, temp);
+#endif
+      unsigned int chk = msgChk(flightData, sizeof(flightData));
+      sprintf(temp, "%i", chk);
+      strcat(flightData, temp);
+      strcat(flightData, ";\n");
+      //#ifdef ALTIMULTIESP32
+      #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
+        Serial.print("$");
+        Serial.print(flightData);
+      #endif
+        SerialCom.print("$");
+        SerialCom.print(flightData);
+
+      //This will slow down the data
+      // this is for telemetry modules without enought buffer
+      if (config.telemetryType == 0) 
+        delay(0);
+      else if (config.telemetryType == 1)  
+        delay(20); 
+      else if (config.telemetryType == 2)
+        delay(50);
+      else if (config.telemetryType == 3)
+        delay(100);
+    }
+  }
+}
 /*
    CanRecord()
    First count the number of flights. It cannot be greter than 25

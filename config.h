@@ -23,7 +23,7 @@
 // if you have a modified ALTIMULTI board using an ATMega328 using different Arduino pins for the
 // pyro output so that they do not fire following a reset of the board then define ALTIMULTIV2
 // select Arduino Uno board to compile it
-//#define ALTIMULTIV2
+#define ALTIMULTIV2
 
 // if you have the STM32 shield then define ALTIMULTISTM32
 //  Compiling the firmware:
@@ -32,7 +32,7 @@
 //  and follow all instructions
 //  version 1.6.12 of the core M3 need to be install
 //  Choose "Generic STM32F103C board" to compile
-#define ALTIMULTISTM32
+//#define ALTIMULTISTM32
 
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
 // choose the Wroom board to compile it
@@ -77,7 +77,7 @@
 //////////// do not change anything after unless you know what you are doing /////////////////////
 
 #define MAJOR_VERSION 2
-#define MINOR_VERSION 2
+#define MINOR_VERSION 3
 #define BUILD 1
 #define CONFIG_START 32
 

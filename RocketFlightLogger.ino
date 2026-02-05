@@ -1669,6 +1669,7 @@ void interpretCommandBuffer(char *commandbuffer) {
     {
       logger.printFlightData(i);
     }
+    //logger.recoverFlightData(100);
 #ifdef TELEMETRY_ESP32
     //#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
     Serial.print(F("$end;\n"));
@@ -1835,6 +1836,7 @@ void interpretCommandBuffer(char *commandbuffer) {
 #endif
     SerialCom.print(F("$OK;\n"));
   }
+  
   //Number of flight
   else if (commandbuffer[0] == 'n')
   {
@@ -1849,6 +1851,7 @@ void interpretCommandBuffer(char *commandbuffer) {
 
     strcat(flightData, "nbrOfFlight,");
     sprintf(temp, "%i,", logger.getLastFlightNbr() + 1 );
+    //sprintf(temp, "%i,",  1 );
     strcat(flightData, temp);
     unsigned int chk = msgChk(flightData, sizeof(flightData));
     sprintf(temp, "%i", chk);
@@ -1864,13 +1867,10 @@ void interpretCommandBuffer(char *commandbuffer) {
     SerialCom.print("$");
     SerialCom.print(flightData);
     SerialCom.print(F("$end;\n"));
-
-
   }
   // send test tram
   else if (commandbuffer[0] == 'o')
   {
-
 #ifdef TELEMETRY_ESP32
     //#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
     Serial.print(F("$start;\n"));
@@ -1884,6 +1884,7 @@ void interpretCommandBuffer(char *commandbuffer) {
 #endif
     SerialCom.print(F("$end;\n"));
   }
+  
   //altimeter config param
   //write  config
   else if (commandbuffer[0] == 'p')
@@ -1937,6 +1938,7 @@ void interpretCommandBuffer(char *commandbuffer) {
       SerialCom.print(F("$start;\n"));
 
       logger.printFlightData(atoi(temp));
+      //logger.recoverFlightData(1625);
 
 #ifdef TELEMETRY_ESP32
       //#if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
@@ -1947,6 +1949,29 @@ void interpretCommandBuffer(char *commandbuffer) {
     else
       SerialCom.println(F("not a valid flight"));
   }
+//this will read the first X measures of a  flight
+  else if (commandbuffer[0] == 'R')
+  {
+    char temp[5];
+    int i=1;
+    while(commandbuffer[i]!='\0') {
+      temp[i-1] = commandbuffer[i];
+      i++;
+    }
+    temp[i-1] = '\0';
+    //now retrieve
+    #ifdef TELEMETRY_ESP32
+    Serial.print(F("$start;\n"));
+    #endif
+    SerialCom.print(F("$start;\n"));
+    logger.recoverFlightData(atoi(temp));
+    
+    #ifdef TELEMETRY_ESP32
+    Serial.print(F("$end;\n")); 
+    #endif
+    SerialCom.print(F("$end;\n"));  
+  }
+  
   //write altimeter config
   else if (commandbuffer[0] == 's')
   {
@@ -1976,6 +2001,7 @@ void interpretCommandBuffer(char *commandbuffer) {
     initAlti();
     SerialCom.print(F("config reseted\n"));
   }
+  //change ESP32 name
   else if (commandbuffer[0] == 'v')
   {
     #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
@@ -1984,12 +2010,14 @@ void interpretCommandBuffer(char *commandbuffer) {
     preferences.end();
     #endif
   }
+  
   // Recording
   else if (commandbuffer[0] == 'w')
   {
     SerialCom.println(F("Recording \n"));
     recordAltitude();
   }
+  
   //delete last curve
   else if (commandbuffer[0] == 'x')
   {

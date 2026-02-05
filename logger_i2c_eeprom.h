@@ -90,6 +90,7 @@ public:
     long getFlightStart(int flightNbr);
     long getFlightStop(int flightNbr);
     void printFlightData(int flightNbr);
+    void recoverFlightData(int nbrOfSamples);
     boolean CanRecord();
     unsigned long writeFastFlight(unsigned long eeaddress);
     long getSizeOfFlightData();
