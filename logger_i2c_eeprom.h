@@ -1,3 +1,8 @@
+/***********************************************************
+ * 
+ * Description:
+ * This is a wrapper to log the flight to the eeprom
+ **********************************************************/
 #ifndef _LOGGER_I2C_EEPROM_H
 #define _LOGGER_I2C_EEPROM_H
 

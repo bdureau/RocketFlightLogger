@@ -7,9 +7,6 @@
  * 
  * First you need to make sure that you have all the require Arduino libraries to compile it
  * 
- * required libraries:
- * Adafruit_BMP085 or BMP280 or BMP085_stm32
- * 
  * 
  */
 
@@ -23,7 +20,7 @@
 // if you have a modified ALTIMULTI board using an ATMega328 using different Arduino pins for the
 // pyro output so that they do not fire following a reset of the board then define ALTIMULTIV2
 // select Arduino Uno board to compile it
-#define ALTIMULTIV2
+//#define ALTIMULTIV2
 
 // if you have the STM32 shield then define ALTIMULTISTM32
 //  Compiling the firmware:
@@ -37,6 +34,13 @@
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
 // choose the Wroom board to compile it
 //#define ALTIMULTIESP32
+#define ALTIMULTIESP32V2
+
+// if you have the ESP32 AltiMulti board and you want to save the flights in the ESP32 flash
+// (LittleFS) rather than in the external I2C eeprom then define ALTIMULTIESP32V2
+// choose the Wroom board with a partition scheme that has a SPIFFS/LittleFS partition (default is fine)
+// you will need the ArduinoJson library
+//#define ALTIMULTIESP32V2
 
 // if you have the ESP32 AltiMulti board then define ALTIMULTIESP32
 // choose the Wroom board to compile it
@@ -77,12 +81,20 @@
 //////////// do not change anything after unless you know what you are doing /////////////////////
 
 #define MAJOR_VERSION 2
-#define MINOR_VERSION 3
+#define MINOR_VERSION 4
 #define BUILD 1
 #define CONFIG_START 32
 
 #ifdef ALTIMULTISTM32
 #include <itoa.h>
+#endif
+
+// The ALTIMULTIESP32V2 is the same board as the ALTIMULTIESP32, only the flight logger is different
+// so it gets everything that is defined for the ALTIMULTIESP32
+#ifdef ALTIMULTIESP32V2
+#ifndef ALTIMULTIESP32
+#define ALTIMULTIESP32
+#endif
 #endif
 
 
@@ -107,7 +119,11 @@
 #endif
 
 #ifdef ALTIMULTIESP32
+#ifdef ALTIMULTIESP32V2
 #define BOARD_FIRMWARE "AltiMultiESP32"
+#else
+#define BOARD_FIRMWARE "AltiMultiESP32"
+#endif
 #define TELEMETRY_ESP32
 #define NBR_PYRO_OUT3
 #include "BluetoothSerial.h"
@@ -153,6 +169,14 @@ extern BluetoothSerial SerialBT;
 #include "Arduino.h"
 //used for writing in the microcontroler internal eeprom
 #include <EEPROM.h>
+
+// C4: keep constant strings in flash on AVR (ATMega328 has only 2KB of RAM)
+// On the other boards (STM32, ESP32) constants are already in flash so this is a plain strcat
+#if defined(__AVR__)
+#define STRCAT_P(dest, str) strcat_P(dest, PSTR(str))
+#else
+#define STRCAT_P(dest, str) strcat(dest, str)
+#endif
 
 
 //pyro out 1
@@ -207,7 +231,6 @@ extern ConfigStruct config;
 extern void defaultConfig();
 extern bool readAltiConfig();
 extern int getOutPin(int );
-//extern bool writeAltiConfig( char * );
 extern bool writeAltiConfigV2( char * );
 extern void printAltiConfig( char *);
 extern void writeConfigStruc();

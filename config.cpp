@@ -286,7 +286,7 @@ void printAltiConfig(char *altiName)
   if (!ret)
     SerialCom.print(F("invalid conf"));
 
-  strcat(altiConfig, "alticonfig,");
+  STRCAT_P(altiConfig, "alticonfig,");
 
   //Unit
   sprintf(temp, "%i,", config.unit);
@@ -384,10 +384,10 @@ void printAltiConfig(char *altiName)
     #endif*/
 #ifdef TELEMETRY_ESP32
   //#if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
-  Serial.print("$");
+  Serial.print('$');
   Serial.print(altiConfig);
 #endif
-  SerialCom.print("$");
+  SerialCom.print('$');
   //SerialCom.print(altiConfig);
   // the following will slow down the connection speed so that it works better with telemetry module
   // or bluetooth module with no buffer

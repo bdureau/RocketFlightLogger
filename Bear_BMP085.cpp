@@ -138,8 +138,9 @@ int32_t BMP085::readPressure(void) {
     #endif*/
 
   // do temperature calculations
-  X1 = (UT - (int32_t)(ac6)) * ((int32_t)(ac5)) / pow(2, 15);
-  X2 = ((int32_t)mc * pow(2, 11)) / (X1 + (int32_t)md);
+  // B3: integer constants instead of pow(), same result (integer division truncates like the float cast did)
+  X1 = (UT - (int32_t)(ac6)) * ((int32_t)(ac5)) / 32768L;
+  X2 = ((int32_t)mc * 2048L) / (X1 + (int32_t)md);
   B5 = X1 + X2;
 
 #if BMP085_DEBUG == 1
@@ -215,10 +216,11 @@ float BMP085::readTemperature(void) {
 #endif
 
   // step 1
-  X1 = (UT - (int32_t)ac6) * ((int32_t)ac5) / pow(2, 15);
-  X2 = ((int32_t)mc * pow(2, 11)) / (X1 + (int32_t)md);
+  // B3: integer constants instead of pow(), same result
+  X1 = (UT - (int32_t)ac6) * ((int32_t)ac5) / 32768L;
+  X2 = ((int32_t)mc * 2048L) / (X1 + (int32_t)md);
   B5 = X1 + X2;
-  temp = (B5 + 8) / pow(2, 4);
+  temp = (B5 + 8) / 16.0;
   temp /= 10;
 
   return temp;

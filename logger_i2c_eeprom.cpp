@@ -1,4 +1,6 @@
 #include "logger_i2c_eeprom.h"
+// the ALTIMULTIESP32V2 saves the flights in the ESP32 flash (see loggerESP32)
+#ifndef ALTIMULTIESP32V2
 #include "IC2extEEPROM.h"
 extEEPROM eep(kbits_512, 1, 64);
 logger_I2C_eeprom::logger_I2C_eeprom(uint8_t deviceAddress)
@@ -148,11 +150,11 @@ int logger_I2C_eeprom::printFlightList()
   {
     if (_FlightConfig[i].flight_start == 0)
       break;
-    SerialCom.print("Flight Nbr: ");
+    SerialCom.print(F("Flight Nbr: "));
     SerialCom.println(i);
-    SerialCom.print("Start: ");
+    SerialCom.print(F("Start: "));
     SerialCom.println(_FlightConfig[i].flight_start);
-    SerialCom.print("End: ");
+    SerialCom.print(F("End: "));
     SerialCom.println(_FlightConfig[i].flight_stop);
   }
   return i;
@@ -255,33 +257,33 @@ void logger_I2C_eeprom::printFlightData(int flightNbr)
       char flightData[120] = "";
       char temp[20] = "";
       currentTime = currentTime + getFlightTimeData();
-      strcat(flightData, "data,");
+      STRCAT_P(flightData, "data,");
       sprintf(temp, "%i,", flightNbr );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", currentTime );
+      sprintf(temp, "%lu,", currentTime ); // A10: %lu/%ld so that long values are correct on AVR
       strcat(flightData, temp);
-      sprintf(temp, "%i,", getFlightAltitudeData() );
+      sprintf(temp, "%ld,", getFlightAltitudeData() );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", _FlightData.temperature );
+      sprintf(temp, "%ld,", _FlightData.temperature );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", _FlightData.pressure );
+      sprintf(temp, "%ld,", _FlightData.pressure );
       strcat(flightData, temp);
 #ifdef LOG_VOLTAGE
-      sprintf(temp, "%i,", _FlightData.voltage );
+      sprintf(temp, "%ld,", _FlightData.voltage );
       strcat(flightData, temp);
 #endif
 #if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
-      sprintf(temp, "%i,", _FlightData.ADXL375accelX );
+      sprintf(temp, "%ld,", _FlightData.ADXL375accelX );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", _FlightData.ADXL375accelY );
+      sprintf(temp, "%ld,", _FlightData.ADXL375accelY );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", _FlightData.ADXL375accelZ );
+      sprintf(temp, "%ld,", _FlightData.ADXL375accelZ );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", _FlightData.ADXL345accelX );
+      sprintf(temp, "%ld,", _FlightData.ADXL345accelX );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", _FlightData.ADXL345accelY );
+      sprintf(temp, "%ld,", _FlightData.ADXL345accelY );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", _FlightData.ADXL345accelZ );
+      sprintf(temp, "%ld,", _FlightData.ADXL345accelZ );
       strcat(flightData, temp);
 #endif
       unsigned int chk = msgChk(flightData, sizeof(flightData));
@@ -290,10 +292,10 @@ void logger_I2C_eeprom::printFlightData(int flightNbr)
       strcat(flightData, ";\n");
       //#ifdef ALTIMULTIESP32
       #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
-        Serial.print("$");
+        Serial.print('$');
         Serial.print(flightData);
       #endif
-        SerialCom.print("$");
+        SerialCom.print('$');
         SerialCom.print(flightData);
 
       //This will slow down the data
@@ -315,7 +317,10 @@ void logger_I2C_eeprom::recoverFlightData(int nbrOfSamples)
   unsigned long startaddress;
   unsigned long endaddress;
 
-  startaddress = 201;//getFlightStart(flightNbr);
+  //startaddress = 201;//getFlightStart(flightNbr);
+  startaddress = getLastFlightEndAddress()+1;
+  if (startaddress < 201)
+    startaddress = 201;
   endaddress = sizeof(_FlightData)*nbrOfSamples; // getFlightStop(flightNbr);
 
   if (startaddress > 200)
@@ -329,33 +334,33 @@ void logger_I2C_eeprom::recoverFlightData(int nbrOfSamples)
       char flightData[120] = "";
       char temp[20] = "";
       currentTime = currentTime + getFlightTimeData();
-      strcat(flightData, "data,");
+      STRCAT_P(flightData, "data,");
       sprintf(temp, "%i,", 1 );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", currentTime );
+      sprintf(temp, "%lu,", currentTime ); // A10: %lu/%ld so that long values are correct on AVR
       strcat(flightData, temp);
-      sprintf(temp, "%i,", getFlightAltitudeData() );
+      sprintf(temp, "%ld,", getFlightAltitudeData() );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", _FlightData.temperature );
+      sprintf(temp, "%ld,", _FlightData.temperature );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", _FlightData.pressure );
+      sprintf(temp, "%ld,", _FlightData.pressure );
       strcat(flightData, temp);
 #ifdef LOG_VOLTAGE
-      sprintf(temp, "%i,", _FlightData.voltage );
+      sprintf(temp, "%ld,", _FlightData.voltage );
       strcat(flightData, temp);
 #endif
 #if defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
-      sprintf(temp, "%i,", _FlightData.ADXL375accelX );
+      sprintf(temp, "%ld,", _FlightData.ADXL375accelX );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", _FlightData.ADXL375accelY );
+      sprintf(temp, "%ld,", _FlightData.ADXL375accelY );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", _FlightData.ADXL375accelZ );
+      sprintf(temp, "%ld,", _FlightData.ADXL375accelZ );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", _FlightData.ADXL345accelX );
+      sprintf(temp, "%ld,", _FlightData.ADXL345accelX );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", _FlightData.ADXL345accelY );
+      sprintf(temp, "%ld,", _FlightData.ADXL345accelY );
       strcat(flightData, temp);
-      sprintf(temp, "%i,", _FlightData.ADXL345accelZ );
+      sprintf(temp, "%ld,", _FlightData.ADXL345accelZ );
       strcat(flightData, temp);
 #endif
       unsigned int chk = msgChk(flightData, sizeof(flightData));
@@ -364,10 +369,10 @@ void logger_I2C_eeprom::recoverFlightData(int nbrOfSamples)
       strcat(flightData, ";\n");
       //#ifdef ALTIMULTIESP32
       #if defined ALTIMULTIESP32 || defined ALTIMULTIESP32_ACCELERO || defined ALTIMULTIESP32_ACCELERO_375 || defined ALTIMULTIESP32_ACCELERO_345
-        Serial.print("$");
+        Serial.print('$');
         Serial.print(flightData);
       #endif
-        SerialCom.print("$");
+        SerialCom.print('$');
         SerialCom.print(flightData);
 
       //This will slow down the data
@@ -413,3 +418,4 @@ boolean logger_I2C_eeprom::CanRecord()
   }
   return true;
 }
+#endif // ALTIMULTIESP32V2

@@ -44,8 +44,8 @@
 #define BMP085_CONTROL           0xF4 
 #define BMP085_TEMPDATA          0xF6
 #define BMP085_PRESSUREDATA      0xF6
-#define BMP085_READTEMPCMD          0x2E
-#define BMP085_READPRESSURECMD            0x34
+#define BMP085_READTEMPCMD       0x2E
+#define BMP085_READPRESSURECMD   0x34
 
 
 class BMP085 {
